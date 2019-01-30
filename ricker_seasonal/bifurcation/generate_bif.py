@@ -68,8 +68,8 @@ def ricker_nb(y, rb):
 
 
 # Simulate to get bifurcation points
-bif_data_x = simulate(model=ricker_b, num_gens=100, rate_min=0.5, rate_max=5, num_rates=1000, num_discard=100)
-bif_data_y = simulate(model=ricker_nb, num_gens=100, rate_min=0.5, rate_max=5, num_rates=1000, num_discard=100)
+bif_data_x = simulate(model=ricker_b, num_gens=100, rate_min=0, rate_max=5, num_rates=1000, num_discard=100)
+bif_data_y = simulate(model=ricker_nb, num_gens=100, rate_min=0, rate_max=5, num_rates=1000, num_discard=100)
 
 
 
