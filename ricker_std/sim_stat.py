@@ -4,7 +4,7 @@
 Created on Thu Jan 28 18:04:51 2019
 
 
-Code to simulate seasonal Ricker model with COEs
+Code to simulate Ricker model (no seasonality)
 Stationary simulations (fixed paramters)
 
 @author: ThomasMBury
@@ -64,9 +64,9 @@ t0 = 0
 tmax = 1000 # make large (to get idealised statistics from stationary distribution)
 tburn = 500 # burn-in period
 seed = 0 # random number generation seed
-rbif = 3.077 # flip bifurcation (from MMA bif file)
+rbif = 2.39 # flip bifurcation (from MMA bif file)
 rl = 0 # low r value
-rh = 5 # high r value
+rh = 4 # high r value
 rinc = 0.05 # amount to increment r by
 
 
@@ -102,11 +102,11 @@ def de_fun(state, control, params):
         
     
     [x, y] = state   # x (y) population after breeding (non-breeding) period
-    [kb, knb, rnb, a] = params
+    [kb, knb, rnb] = params
     rb = control
     
     # Compute pop size after breeding period season t+1
-    xnew = y * np.exp((rb - a*x) * (1-y/kb) )
+    xnew = y * np.exp(rb * (1-y/kb) )
     # Compute pop size after non-breeding period season t+1
     ynew =  xnew * np.exp(rnb * (1-xnew/knb) )
     
@@ -120,11 +120,10 @@ def de_fun(state, control, params):
 kb = 224 # carrying capacity in breeding period
 knb = -84.52 # carrying capacity in non-breeding period
 rnb = -0.0568 # growth rate in non-breeding period
-a = 0.0031 # regulates the strenght of COEs
 
 
 # Parameter list
-params = [kb, knb, rnb, a]
+params = [kb, knb, rnb]
 
 # Control parameter values
 rVals = np.arange(rl, rh, rinc)
