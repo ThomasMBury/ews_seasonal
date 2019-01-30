@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jan 17 18:04:51 2019
+Created on Thu Jan 28 18:04:51 2019
 
 
-Code to simulate predator-prey model for Fussmann study (Science 2000)
-Stationary simulations (fixed dilution rate)
+Code to simulate seasonal Ricker model
+Stationary simulations (fixed paramters)
 
 @author: ThomasMBury
 """
@@ -45,7 +45,7 @@ def apply_inplace(df, field, fun):
 #–----------------------
 
 # Name of directory within data_export
-dir_name = 'ews_stat_sweep_long'
+dir_name = 'ews_stat'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -59,9 +59,9 @@ if not os.path.exists('data_export/'+dir_name):
 
 
 # Simulation parameters
-dt = 0.01
+dt = 1
 t0 = 0
-tmax = 4000 # make large (to get idealised statistics from stationary distribution)
+tmax = 500 # make large (to get idealised statistics from stationary distribution)
 tburn = 500 # burn-in period
 seed = 1 # random number generation seed
 dbif1 = 0.150983 # first Hopf bifurcation (from Mma bif file)

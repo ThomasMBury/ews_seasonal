@@ -1,4 +1,4 @@
-# Aseasonal Ricker model
+# Ricker model (without seasonality)
 
 # Dynamics
 x' = x*exp(rb*(1-x/kb))
@@ -18,6 +18,5 @@ init x=224
 @ ntst=150, npr=500, nmax=2000, ds=0.01, dsmin=0.001, dsmax=0.02, ncol=5
 @ parmin=1, parmax=5, epsl=0.000001, epsu=0.000001, epss=0.000001 
 @ AUTOXMIN=1, AUTOXMAX=5, AUTOYMIN=0, AUTOYMAX=500
-
 
 done
