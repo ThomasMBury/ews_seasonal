@@ -4,7 +4,7 @@
 Created on Thu Jan 28 18:04:51 2019
 
 
-Code to simulate seasonal Ricker model
+Code to simulate seasonal Logistic model with COE
 Stationary simulations (fixed paramters)
 
 @author: ThomasMBury
@@ -61,13 +61,13 @@ if not os.path.exists('data_export/'+dir_name):
 # Simulation parameters
 dt = 1
 t0 = 0
-tmax = 500 # make large (to get idealised statistics from stationary distribution)
+tmax = 1000 # make large (to get idealised statistics from stationary distribution)
 tburn = 500 # burn-in period
-seed = 1 # random number generation seed
-dbif1 = 0.150983 # first Hopf bifurcation (from Mma bif file)
-dbif2 = 0.969538 # second Hopf bifurcation (from Mma bif file)
-dl = 0.005 # low delta value
-dh = 1.6 # high delta value
+seed = 0 # random number generation seed
+rbif = 3.968 # flip bifurcation (from MMA bif file)
+rl = 0 # low r value
+rh = 5 # high r value
+rinc = 0.05 # amount to increment r by
 
 
 
@@ -75,11 +75,13 @@ dh = 1.6 # high delta value
 dt2 = 1 # spacing between time-series for EWS computation
 rw = 1 # rolling window (compute EWS using full time-series)
 bw = 1 # bandwidth (take the whole dataset as stationary)
-lags = [1,2,3,6] # autocorrelation lag times
+lags = [1,2,3] # autocorrelation lag times
 ews = ['var','ac','sd','cv','skew','kurt','smax','aic','cf'] # EWS to compute
 ham_length = 40 # number of data points in Hamming window
 ham_offset = 0.5 # proportion of Hamming window to offset by upon each iteration
 pspec_roll_offset = 20 # offset for rolling window when doing spectrum metrics
+
+
 
 
 #----------------------------------
@@ -87,70 +89,61 @@ pspec_roll_offset = 20 # offset for rolling window when doing spectrum metrics
 #----------------------------------
 
 
-# Function for model dynamics (variables [n,c,r,b])
+# Function dynamic - outputs the subsequent state
 def de_fun(state, control, params):
     '''
     Inputs:
-        state: array of state variables [n,c,r,b]
+        state: array of state variables [x,y]
         control: control parameter that is to be varied
-        params: list of parameter values [ni,bc,kc,bb,kb,epsilon,m,lamda]
+        params: list of parameter values [kb, knb, rnb]
     Output:
-        array of gradient vector (derivative)
+        array for subsequent state
     '''
-    [n,c,r,b] = state
-    [ni,bc,kc,bb,kb,epsilon,m,lamda] = params
-    d = control
+        
     
-    # Gradients for each variable to increment by
-    n_grad = d*(ni-n) - bc*n*c/(kc+n)
-    c_grad = bc*n*c/(kc+n) - bb*c*b/((kb+c)*epsilon) - d*c
-    r_grad = bb*c*r/(kb+c) - (d+m+lamda)*r
-    b_grad = bb*c*r/(kb+c) - (d+m)*b
-            
-    return np.array([n_grad, c_grad, r_grad, b_grad])
+    [x, y] = state   # x (y) population after breeding (non-breeding) period
+    [kb, knb, rnb, a] = params
+    rb = control
+    
+    # Compute pop size after breeding period season t+1
+    xnew = y * (1 + (rb - a*x) * (1-y/kb) )
+    # Compute pop size after non-breeding period season t+1
+    ynew =  xnew * (1 + rnb * (1-xnew/knb) )
+    
+    # Ouput updated state        
+    return np.array([xnew, ynew])
     
     
    
 # System parameters
     
-ni=80 # nitrogen inflow concentration
-bc=3.3 # maximum birth rate of Chlorella
-kc=4.3  # half saturation constant of Chlorella
-bb=2.25 # maximum birth rate of Brachionus
-kb=15   # half-saturation constant of Brachionus
-epsilon=0.25    # assimilation efficacy of Brachionus
-m=0.055 # mortality of Brachionus
-lamda=0.4   # decay of fecundity of Brachionus
+kb = 224 # carrying capacity in breeding period
+knb = -84.52 # carrying capacity in non-breeding period
+rnb = -0.0568 # growth rate in non-breeding period
+a = 0.0031 # regulates the strenght of COEs
+
 
 # Parameter list
-params = [ni,bc,kc,bb,kb,epsilon,m,lamda]
+params = [kb, knb, rnb, a]
 
 # Control parameter values
-deltaVals = np.arange(dl, dh, 0.005)
+rVals = np.arange(rl, rh, rinc)
 
 
 # Noise parameters
-sigma_n = 0 # amplitude for N
-sigma_c = 0.01 # amplitude for Chlorella
-sigma_r = 0 # amplitude for R
-sigma_b = 0.02 # amplitude for Brachionus
+sigma_x = 0.1 # amplitude for x
+sigma_y = 0.1 # amplitude for y
 
 # Initial conditions
-n0 = 2
-c0 = 5
-r0 = 1
-b0 = 2
-
-
+x0 = kb
+y0 = x0 * np.exp(rnb * (1-x0/knb))
 
 
 
 
 #--------------------------------------------
-# Simulate (stationary) realisations of model for each delta value
+# Simulate (stationary) realisations of model for each r value
 #-------------------------------------------
-
-
 
 
 
@@ -163,106 +156,77 @@ np.random.seed(seed)
 # Initialise a list to collect trajectories
 list_traj_append = []
 
-# loop over delta values
+# Loop over control parameter values
 print('\nBegin simulations \n')
-for d in deltaVals:
+for r in rVals:
     
     # Initialise array to store time-series data
     t = np.arange(t0,tmax,dt) # Time array
-    x = np.zeros([len(t), 4]) # State array
+    s = np.zeros([len(t), 2]) # State array
 
     
     # Create brownian increments (s.d. sqrt(dt))
-    dW_n_burn = np.random.normal(loc=0, scale=sigma_n*np.sqrt(dt), size = int(tburn/dt))
-    dW_n = np.random.normal(loc=0, scale=sigma_n*np.sqrt(dt), size = len(t)) 
+    dW_x_burn = np.random.normal(loc=0, scale=sigma_x*np.sqrt(dt), size = int(tburn/dt))
+    dW_x = np.random.normal(loc=0, scale=sigma_x*np.sqrt(dt), size = len(t)) 
     
-    dW_c_burn = np.random.normal(loc=0, scale=sigma_c*np.sqrt(dt), size = int(tburn/dt))
-    dW_c = np.random.normal(loc=0, scale=sigma_c*np.sqrt(dt), size = len(t))
+    dW_y_burn = np.random.normal(loc=0, scale=sigma_y*np.sqrt(dt), size = int(tburn/dt))
+    dW_y = np.random.normal(loc=0, scale=sigma_y*np.sqrt(dt), size = len(t))
   
-    dW_r_burn = np.random.normal(loc=0, scale=sigma_r*np.sqrt(dt), size = int(tburn/dt))
-    dW_r = np.random.normal(loc=0, scale=sigma_r*np.sqrt(dt), size = len(t))
-    
-    dW_b_burn = np.random.normal(loc=0, scale=sigma_b*np.sqrt(dt), size = int(tburn/dt))
-    dW_b = np.random.normal(loc=0, scale=sigma_b*np.sqrt(dt), size = len(t))
     
     # Noise vectors
-    dW_burn = np.array([dW_n_burn,
-                        dW_c_burn,
-                        dW_r_burn,
-                        dW_b_burn]).transpose()
-    
-    dW = np.array([dW_n, dW_c, dW_r, dW_b]).transpose()
+    dW_burn = np.array([dW_x_burn, dW_y_burn]).transpose()
+    dW = np.array([dW_x, dW_y]).transpose()
  
     # IC as a state vector
-    x0 = np.array([n0,c0,r0,b0])
+    s0 = np.array([x0 , y0])
     
     # Run burn-in period on initial condition
     for i in range(int(tburn/dt)):
-        # Update with Euler Maruyama
-        x0 = x0 + de_fun(x0, d, params)*dt + dW_burn[i]
+        # Iterate
+        s0 = de_fun(s0, r, params) + dW_burn[i]
         # Make sure that state variable remains >= 0 
-        x0 = [np.max([k,0]) for k in x0]
+        s0 = [np.max([k,0]) for k in s0]
         
         
     # Initial condition post burn-in period
-    x[0]=x0
+    s[0]=s0
     
     # Run simulation
     for i in range(len(t)-1):
-        x[i+1] = x[i] + de_fun(x[i], d, params)*dt + dW[i]
+        s[i+1] = de_fun(s[i], r, params) + dW[i]
         # make sure that state variable remains >= 0 
-        x[i+1] = [np.max([k,0]) for k in x[i+1]]
+        s[i+1] = [np.max([k,0]) for k in s[i+1]]
             
     # Store series data in a DataFrame
-    data = {'Delta': d,
+    data = {'Growth rate': r,
                 'Time': t,
-                'Nitrogen': x[:,0],
-                'Chlorella': x[:,1],
-                'Reproducing Brachionus': x[:,2],
-                'Brachionus': x[:,3]}
+                'Post-breeding pop': s[:,0],
+                'Post-non-breeding pop': s[:,1]}
     df_temp = pd.DataFrame(data)
     # Append to list
     list_traj_append.append(df_temp)
     
-    print('Simulation with d='+str(d)+' complete')
+    print('Simulation with r='+str(r)+' complete')
 
 #  Concatenate DataFrame from each realisation
 df_traj = pd.concat(list_traj_append)
-df_traj.set_index(['Delta','Time'], inplace=True)
+df_traj.set_index(['Growth rate','Time'], inplace=True)
 
 
 # Coarsen time-series to have spacing dt2 (for EWS computation)
 df_traj_filt = df_traj.loc[::int(dt2/dt)]
 
 
-# Make units of Chlor and Brach consistent with Fussmann experiments
+# Normalise each population size by breeding-carrying capacity
 
-nC = 50000/1000000 # conversion factor to 10^6 cells/ml of Chlorella
-nB = 5 # conversion factor to females/ml of Brachiouns
-
-df_traj_filt = apply_inplace(df_traj_filt, 'Chlorella',
-                             lambda x: nC*x)
-df_traj_filt = apply_inplace(df_traj_filt, 'Reproducing Brachionus',
-                             lambda x: nB*x)
-df_traj_filt = apply_inplace(df_traj_filt, 'Brachionus',
-                             lambda x: nB*x)
+df_traj_filt['x/K'] = df_traj_filt['Post-breeding pop']/kb
+df_traj_filt['y/K'] = df_traj_filt['Post-non-breeding pop']/kb
 
 
-# Export simulation data to SD Memory
-df_traj_filt.to_csv('/Volumes/SDMemory/Datasets/fussmann/sim_data.csv')
-
-
-
-# Import simulation data from SD Memory
-df_traj_filt = pd.read_csv('/Volumes/SDMemory/Datasets/fussmann/sim_data.csv')
-df_traj_filt.set_index(['Delta','Time'], inplace=True)
-
-# Delta Values
-deltaVals = np.array(df_traj_filt.index.levels[0])
 
 
 #----------------------
-## Execute ews_compute for each delta value and each variable
+## Execute ews_compute for each r value and each variable
 #---------------------
 
 
@@ -271,13 +235,14 @@ deltaVals = np.array(df_traj_filt.index.levels[0])
 appended_ews = []
 appended_pspec = []
 
+
 # loop through realisation number
 print('\nBegin EWS computation\n')
-for d in deltaVals:
+for r in rVals:
     # loop through sate variable
-    for var in ['Chlorella', 'Brachionus']:
+    for var in ['Post-breeding pop', 'Post-non-breeding pop']:
         
-        ews_dic = ews_compute(df_traj_filt.loc[d][var], 
+        ews_dic = ews_compute(df_traj_filt.loc[r][var], 
                           roll_window = rw, 
                           band_width = bw,
                           lag_times = lags, 
@@ -292,11 +257,11 @@ for d in deltaVals:
         # The DataFrame of power spectra
         df_pspec_temp = ews_dic['Power spectrum']
         
-        # Include a column in the DataFrames for delta value and variable
-        df_ews_temp['Delta'] = d
+        # Include a column in the DataFrames for r value and variable
+        df_ews_temp['Growth rate'] = r
         df_ews_temp['Variable'] = var
         
-        df_pspec_temp['Delta'] = d
+        df_pspec_temp['Growth rate'] = r
         df_pspec_temp['Variable'] = var
                 
         # Add DataFrames to list
@@ -304,31 +269,31 @@ for d in deltaVals:
         appended_pspec.append(df_pspec_temp)
         
     # Print status every realisation
-    print('EWS for delta =  '+str(d)+' complete')
+    print('EWS for r =  '+str(r)+' complete')
 
 
-# Concatenate EWS DataFrames. Index [Delta, Variable, Time]
-df_ews_full = pd.concat(appended_ews).reset_index().set_index(['Delta','Variable','Time'])
+# Concatenate EWS DataFrames. Index [Growth rate, Variable, Time]
+df_ews_full = pd.concat(appended_ews).reset_index().set_index(['Growth rate','Variable','Time'])
 # Concatenate power spectrum DataFrames. Index [Realisation number, Variable, Time, Frequency]
-df_pspec = pd.concat(appended_pspec).reset_index().set_index(['Delta','Variable','Time','Frequency'])
+df_pspec = pd.concat(appended_pspec).reset_index().set_index(['Growth rate','Variable','Time','Frequency'])
 
 
 # Refine DataFrame to just have EWS data (no time dependence)
-df_ews = df_ews_full.dropna().reset_index(level=2, drop=True).reorder_levels(['Variable', 'Delta'])
-df_pspec = df_pspec.reset_index(level=2, drop=True).reorder_levels(['Variable', 'Delta','Frequency'])
+df_ews = df_ews_full.dropna().reset_index(level=2, drop=True).reorder_levels(['Variable', 'Growth rate'])
+df_pspec = df_pspec.reset_index(level=2, drop=True).reorder_levels(['Variable', 'Growth rate','Frequency'])
 
 
 
 #--------------------------
-## Grid plot of all trajectories
+## Grid plot of some trajectories
 #--------------------------
 
 # Set up frame and axes
-g = sns.FacetGrid(df_ews_full.reset_index(), 
-                  col='Delta',
+g = sns.FacetGrid(df_ews_full.loc[rVals[0:-1:(int(len(rVals)/4))]].reset_index(), 
+                  col='Growth rate',
                   hue='Variable',
                   palette='Set1',
-                  col_wrap=3,
+                  col_wrap=2,
                   sharey=False,
                   aspect=1.5,
                   height=1.8
@@ -337,42 +302,47 @@ g = sns.FacetGrid(df_ews_full.reset_index(),
 plt.rc('axes', titlesize=10)
 # Plot state variable
 g.map(plt.plot, 'Time', 'State variable', linewidth=1)
-## Plot smoothing
-#g.map(plt.plot, 'Time', 'Smoothing', color='tab:orange', linewidth=1)
+# Plot smoothing
+g.map(plt.plot, 'Time', 'Smoothing', color='tab:orange', linewidth=1)
 # Axes properties
 axes = g.axes
 # Assign plot label
 plot_traj = g
 
-# Axes properties
-axes = g.axes
-for i in range(len(axes)):
-    ax=axes[i]
-    d=deltaVals[i]
-    ax.set_ylim(bottom=0, top=60)
+## Axes properties
+#axes = g.axes
+#for i in range(len(axes)):
+#    ax=axes[i]
+#    r=rVals[i]
+#    ax.set_ylim(bottom=0, top=60)
 
-    
-## Export plot
-#plot_traj.savefig("../figures/empirical_series2.png", dpi=200)
+
 
 
 #----------------
-## Plots of EWS against delta value
+## Plots of EWS against r value
 #----------------
 
 # Plot of EWS metrics
 fig1, axes = plt.subplots(nrows=5, ncols=1, sharex=True, figsize=(6,6))
-df_ews.loc['Chlorella'][['Variance']].plot(ax=axes[0],title='Early warning signals')
-df_ews.loc['Brachionus'][['Variance']].plot(ax=axes[0],secondary_y=True)
-df_ews.loc['Chlorella'][['Coefficient of variation']].plot(ax=axes[1])
-df_ews.loc['Brachionus'][['Coefficient of variation']].plot(ax=axes[1],secondary_y=True)
-df_ews.loc['Chlorella'][['Lag-1 AC']].plot(ax=axes[2])
-df_ews.loc['Brachionus'][['Lag-1 AC']].plot(ax=axes[2],secondary_y=True)
-df_ews.loc['Chlorella'][['Smax']].plot(ax=axes[3])
-df_ews.loc['Brachionus'][['Smax']].plot(ax=axes[3],secondary_y=True)
-df_ews.loc['Chlorella'][['AIC hopf']].plot(ax=axes[4], ylim=(0,1.1))
-df_ews.loc['Brachionus'][['AIC hopf']].plot(ax=axes[4],
+df_ews.loc['Post-breeding pop'][['Variance']].plot(ax=axes[0],title='Early warning signals')
+df_ews.loc['Post-non-breeding pop'][['Variance']].plot(ax=axes[0],secondary_y=True)
+df_ews.loc['Post-breeding pop'][['Coefficient of variation']].plot(ax=axes[1])
+df_ews.loc['Post-non-breeding pop'][['Coefficient of variation']].plot(ax=axes[1],secondary_y=True)
+df_ews.loc['Post-breeding pop'][['Lag-1 AC']].plot(ax=axes[2])
+df_ews.loc['Post-non-breeding pop'][['Lag-1 AC']].plot(ax=axes[2],secondary_y=True)
+df_ews.loc['Post-breeding pop'][['Smax']].plot(ax=axes[3])
+df_ews.loc['Post-non-breeding pop'][['Smax']].plot(ax=axes[3],secondary_y=True)
+df_ews.loc['Post-breeding pop'][['AIC hopf']].plot(ax=axes[4], ylim=(0,1.1))
+df_ews.loc['Post-non-breeding pop'][['AIC hopf']].plot(ax=axes[4],
           secondary_y=True, ylim=(0,1.1))
+
+
+
+
+
+
+
 
 
 
@@ -384,10 +354,10 @@ df_ews.loc['Brachionus'][['AIC hopf']].plot(ax=axes[4],
 xmin = -np.pi
 xmax = np.pi
 
-## Chlorella
-species='Chlorella'
-g = sns.FacetGrid(df_pspec.loc[species].reset_index(level=['Delta','Frequency']), 
-                  col='Delta',
+## Post-breeding population
+var = 'Post-breeding pop'
+g = sns.FacetGrid(df_pspec.loc[var].loc[rVals[0:-1:(int(len(rVals)/4))]].reset_index(level=['Growth rate','Frequency']), 
+                  col='Growth rate',
                   col_wrap=3,
                   sharey=False,
                   aspect=1.5,
@@ -396,34 +366,35 @@ g = sns.FacetGrid(df_pspec.loc[species].reset_index(level=['Delta','Frequency'])
 # Plots
 plt.rc('axes', titlesize=10) 
 g.map(plt.plot, 'Frequency', 'Empirical', color='k', linewidth=1)
+g.map(plt.plot, 'Frequency', 'Fit null', color='g', linestyle='dashed', linewidth=1)
 g.map(plt.plot, 'Frequency', 'Fit fold', color='b', linestyle='dashed', linewidth=1)
 g.map(plt.plot, 'Frequency', 'Fit hopf', color='r', linestyle='dashed', linewidth=1)
-g.map(plt.plot, 'Frequency', 'Fit null', color='g', linestyle='dashed', linewidth=1)
+
 # Axes properties
 axes = g.axes
 # Global axes properties
 for i in range(len(axes)):
     ax=axes[i]
-    d=deltaVals[i]
-#    ax.set_ylim(bottom=0, top=1.1*max(df_pspec.loc[species,d]['Empirical'].loc[xmin:xmax].dropna()))
+    r=rVals[i]
+#    ax.set_ylim(bottom=0, top=1.1*max(df_pspec.loc[var,d]['Empirical'].loc[xmin:xmax].dropna()))
     ax.set_xlim(left=xmin, right=xmax)
     ax.set_xticks([-3,-2,-1,0,1,2,3])
-    ax.set_title('Delta = %.2f' % deltaVals[i])
+    ax.set_title('r = %.2f' % rVals[i])
     # AIC weights
     xpos=0.7
     ypos=0.9
     ax.text(xpos,ypos,
-            '$w_f$ = %.1f' % df_ews.loc[species,d]['AIC fold'],
+            '$w_f$ = %.1f' % df_ews.loc[var,r]['AIC fold'],
             fontsize=9,
             color='b',
             transform=ax.transAxes)  
     ax.text(xpos,ypos-0.12,
-            '$w_h$ = %.1f' % df_ews.loc[species,d]['AIC hopf'],
+            '$w_h$ = %.1f' % df_ews.loc[var,r]['AIC hopf'],
             fontsize=9,
             color='r',
             transform=ax.transAxes)
     ax.text(xpos,ypos-2*0.12,
-            '$w_n$ = %.1f' % df_ews.loc[species,d]['AIC null'],
+            '$w_n$ = %.1f' % df_ews.loc[var,r]['AIC null'],
             fontsize=9,
             color='g',
             transform=ax.transAxes)
@@ -437,14 +408,18 @@ for ax in axes[::3]:
 #for ax in axes[6:9]:
 #    ax.set_ylim(top=0.25)
 # Assign to plot label
-pspec_plot_chlor=g
+pspec_plot_breeding=g
 
 
 
-## Brachionus
-species='Brachionus'
-g = sns.FacetGrid(df_pspec.loc[species].reset_index(level=['Delta','Frequency']), 
-                  col='Delta',
+# Limits for x-axis
+xmin = -np.pi
+xmax = np.pi
+
+## Post-non-breeding population
+var = 'Post-non-breeding pop'
+g = sns.FacetGrid(df_pspec.loc[var].loc[rVals[0:-1:(int(len(rVals)/4))]].reset_index(level=['Growth rate','Frequency']), 
+                  col='Growth rate',
                   col_wrap=3,
                   sharey=False,
                   aspect=1.5,
@@ -453,34 +428,35 @@ g = sns.FacetGrid(df_pspec.loc[species].reset_index(level=['Delta','Frequency'])
 # Plots
 plt.rc('axes', titlesize=10) 
 g.map(plt.plot, 'Frequency', 'Empirical', color='k', linewidth=1)
+g.map(plt.plot, 'Frequency', 'Fit null', color='g', linestyle='dashed', linewidth=1)
 g.map(plt.plot, 'Frequency', 'Fit fold', color='b', linestyle='dashed', linewidth=1)
 g.map(plt.plot, 'Frequency', 'Fit hopf', color='r', linestyle='dashed', linewidth=1)
-g.map(plt.plot, 'Frequency', 'Fit null', color='g', linestyle='dashed', linewidth=1)
+
 # Axes properties
 axes = g.axes
 # Global axes properties
 for i in range(len(axes)):
     ax=axes[i]
-    d=deltaVals[i]
-#    ax.set_ylim(bottom=0, top=1.1*max(df_pspec.loc[species,d]['Empirical'].loc[xmin:xmax].dropna()))
+    r=rVals[i]
+#    ax.set_ylim(bottom=0, top=1.1*max(df_pspec.loc[var,d]['Empirical'].loc[xmin:xmax].dropna()))
     ax.set_xlim(left=xmin, right=xmax)
     ax.set_xticks([-3,-2,-1,0,1,2,3])
-    ax.set_title('Delta = %.2f' % deltaVals[i])
+    ax.set_title('r = %.2f' % rVals[i])
     # AIC weights
     xpos=0.7
     ypos=0.9
     ax.text(xpos,ypos,
-            '$w_f$ = %.1f' % df_ews.loc[species,d]['AIC fold'],
+            '$w_f$ = %.1f' % df_ews.loc[var,r]['AIC fold'],
             fontsize=9,
             color='b',
             transform=ax.transAxes)  
     ax.text(xpos,ypos-0.12,
-            '$w_h$ = %.1f' % df_ews.loc[species,d]['AIC hopf'],
+            '$w_h$ = %.1f' % df_ews.loc[var,r]['AIC hopf'],
             fontsize=9,
             color='r',
             transform=ax.transAxes)
     ax.text(xpos,ypos-2*0.12,
-            '$w_n$ = %.1f' % df_ews.loc[species,d]['AIC null'],
+            '$w_n$ = %.1f' % df_ews.loc[var,r]['AIC null'],
             fontsize=9,
             color='g',
             transform=ax.transAxes)
@@ -494,8 +470,7 @@ for ax in axes[::3]:
 #for ax in axes[6:9]:
 #    ax.set_ylim(top=0.25)
 # Assign to plot label
-pspec_plot_brach=g
-
+pspec_plot_nonbreeding=g
 
 
 
@@ -506,25 +481,25 @@ pspec_plot_brach=g
 
 ## Export EWS data
 
-# Chlorella ews
-df_ews_chlor = df_ews.loc['Chlorella']
-df_ews_chlor.to_csv('data_export/'+dir_name+'/ews_chlor.csv')
+# Post-breeding season EWS DataFrame
+df_ews_x = df_ews.loc['Post-breeding pop']
+df_ews_x.to_csv('data_export/'+dir_name+'/ews_x.csv')
 
-# Brachionus EWS data
-df_ews_brach = df_ews.loc['Brachionus']
-df_ews_brach.to_csv('data_export/'+dir_name+'/ews_brach.csv')
-
-
-## Export power spectrum (empirical data)
-
-# Chlorella pspecs
-df_pspec_chlor = df_pspec.loc['Chlorella','Empirical'].dropna()
-df_pspec_chlor.to_csv('data_export/'+dir_name+'/pspec_chlor.csv')
+# Post non-breeding season EWS DataFrame
+df_ews_y = df_ews.loc['Post-non-breeding pop']
+df_ews_y.to_csv('data_export/'+dir_name+'/ews_y.csv')
 
 
-# Brachionus pspecs
-df_pspec_brach = df_pspec.loc['Brachionus', 'Empirical'].dropna()
-df_pspec_brach.to_csv('data_export/'+dir_name+'/pspec_brach.csv')
+### Export power spectrum (empirical data)
+#
+## Chlorella pspecs
+#df_pspec_chlor = df_pspec.loc['Chlorella','Empirical'].dropna()
+#df_pspec_chlor.to_csv('data_export/'+dir_name+'/pspec_chlor.csv')
+#
+#
+## Brachionus pspecs
+#df_pspec_brach = df_pspec.loc['Brachionus', 'Empirical'].dropna()
+#df_pspec_brach.to_csv('data_export/'+dir_name+'/pspec_brach.csv')
 
 
 

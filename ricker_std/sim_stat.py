@@ -64,9 +64,9 @@ t0 = 0
 tmax = 1000 # make large (to get idealised statistics from stationary distribution)
 tburn = 500 # burn-in period
 seed = 0 # random number generation seed
-rbif = 2.39 # flip bifurcation (from MMA bif file)
+rbif = 2 # flip bifurcation (from MMA bif file)
 rl = 0 # low r value
-rh = 4 # high r value
+rh = 5 # high r value
 rinc = 0.05 # amount to increment r by
 
 
@@ -101,17 +101,15 @@ def de_fun(state, control, params):
     '''
         
     
-    [x, y] = state   # x (y) population after breeding (non-breeding) period
-    [kb, knb, rnb] = params
+    [x] = state   # x population size
+    kb = params
     rb = control
     
-    # Compute pop size after breeding period season t+1
-    xnew = y * np.exp(rb * (1-y/kb) )
-    # Compute pop size after non-breeding period season t+1
-    ynew =  xnew * np.exp(rnb * (1-xnew/knb) )
+    # Compute pop size
+    xnew = x * np.exp(rb * (1-x/kb) )
     
     # Ouput updated state        
-    return np.array([xnew, ynew])
+    return np.array([xnew])
     
     
    
@@ -123,7 +121,7 @@ rnb = -0.0568 # growth rate in non-breeding period
 
 
 # Parameter list
-params = [kb, knb, rnb]
+params = [kb]
 
 # Control parameter values
 rVals = np.arange(rl, rh, rinc)
@@ -135,7 +133,6 @@ sigma_y = 0.1 # amplitude for y
 
 # Initial conditions
 x0 = kb
-y0 = x0 * np.exp(rnb * (1-x0/knb))
 
 
 
@@ -161,31 +158,27 @@ for r in rVals:
     
     # Initialise array to store time-series data
     t = np.arange(t0,tmax,dt) # Time array
-    s = np.zeros([len(t), 2]) # State array
+    s = np.zeros([len(t), 1]) # State array
 
     
     # Create brownian increments (s.d. sqrt(dt))
     dW_x_burn = np.random.normal(loc=0, scale=sigma_x*np.sqrt(dt), size = int(tburn/dt))
     dW_x = np.random.normal(loc=0, scale=sigma_x*np.sqrt(dt), size = len(t)) 
-    
-    dW_y_burn = np.random.normal(loc=0, scale=sigma_y*np.sqrt(dt), size = int(tburn/dt))
-    dW_y = np.random.normal(loc=0, scale=sigma_y*np.sqrt(dt), size = len(t))
   
     
     # Noise vectors
-    dW_burn = np.array([dW_x_burn, dW_y_burn]).transpose()
-    dW = np.array([dW_x, dW_y]).transpose()
+    dW_burn = np.array([dW_x_burn]).transpose()
+    dW = np.array([dW_x]).transpose()
  
     # IC as a state vector
-    s0 = np.array([x0 , y0])
+    s0 = np.array([x0])
     
     # Run burn-in period on initial condition
     for i in range(int(tburn/dt)):
         # Iterate
         s0 = de_fun(s0, r, params) + dW_burn[i]
         # Make sure that state variable remains >= 0 
-        s0 = [np.max([k,0]) for k in s0]
-        
+        s0 = np.array([np.max([k,0]) for k in s0])
         
     # Initial condition post burn-in period
     s[0]=s0
@@ -194,13 +187,12 @@ for r in rVals:
     for i in range(len(t)-1):
         s[i+1] = de_fun(s[i], r, params) + dW[i]
         # make sure that state variable remains >= 0 
-        s[i+1] = [np.max([k,0]) for k in s[i+1]]
+        s[i+1] = np.array([np.max([k,0]) for k in s[i+1]])
             
     # Store series data in a DataFrame
     data = {'Growth rate': r,
                 'Time': t,
-                'Post-breeding pop': s[:,0],
-                'Post-non-breeding pop': s[:,1]}
+                'Pop': s[:,0]}
     df_temp = pd.DataFrame(data)
     # Append to list
     list_traj_append.append(df_temp)
@@ -214,13 +206,6 @@ df_traj.set_index(['Growth rate','Time'], inplace=True)
 
 # Coarsen time-series to have spacing dt2 (for EWS computation)
 df_traj_filt = df_traj.loc[::int(dt2/dt)]
-
-
-# Normalise each population size by breeding-carrying capacity
-
-df_traj_filt['x/K'] = df_traj_filt['Post-breeding pop']/kb
-df_traj_filt['y/K'] = df_traj_filt['Post-non-breeding pop']/kb
-
 
 
 
@@ -239,7 +224,7 @@ appended_pspec = []
 print('\nBegin EWS computation\n')
 for r in rVals:
     # loop through sate variable
-    for var in ['Post-breeding pop', 'Post-non-breeding pop']:
+    for var in ['Pop']:
         
         ews_dic = ews_compute(df_traj_filt.loc[r][var], 
                           roll_window = rw, 
@@ -324,17 +309,11 @@ plot_traj = g
 
 # Plot of EWS metrics
 fig1, axes = plt.subplots(nrows=5, ncols=1, sharex=True, figsize=(6,6))
-df_ews.loc['Post-breeding pop'][['Variance']].plot(ax=axes[0],title='Early warning signals')
-df_ews.loc['Post-non-breeding pop'][['Variance']].plot(ax=axes[0],secondary_y=True)
-df_ews.loc['Post-breeding pop'][['Coefficient of variation']].plot(ax=axes[1])
-df_ews.loc['Post-non-breeding pop'][['Coefficient of variation']].plot(ax=axes[1],secondary_y=True)
-df_ews.loc['Post-breeding pop'][['Lag-1 AC']].plot(ax=axes[2])
-df_ews.loc['Post-non-breeding pop'][['Lag-1 AC']].plot(ax=axes[2],secondary_y=True)
-df_ews.loc['Post-breeding pop'][['Smax']].plot(ax=axes[3])
-df_ews.loc['Post-non-breeding pop'][['Smax']].plot(ax=axes[3],secondary_y=True)
-df_ews.loc['Post-breeding pop'][['AIC hopf']].plot(ax=axes[4], ylim=(0,1.1))
-df_ews.loc['Post-non-breeding pop'][['AIC hopf']].plot(ax=axes[4],
-          secondary_y=True, ylim=(0,1.1))
+df_ews.loc['Pop'][['Variance']].plot(ax=axes[0],title='Early warning signals')
+df_ews.loc['Pop'][['Coefficient of variation']].plot(ax=axes[1])
+df_ews.loc['Pop'][['Lag-1 AC']].plot(ax=axes[2])
+df_ews.loc['Pop'][['Smax']].plot(ax=axes[3])
+df_ews.loc['Pop'][['AIC hopf']].plot(ax=axes[4], ylim=(0,1.1))
 
 
 
@@ -354,7 +333,7 @@ xmin = -np.pi
 xmax = np.pi
 
 ## Post-breeding population
-var = 'Post-breeding pop'
+var = 'Pop'
 g = sns.FacetGrid(df_pspec.loc[var].loc[rVals[0:-1:(int(len(rVals)/4))]].reset_index(level=['Growth rate','Frequency']), 
                   col='Growth rate',
                   col_wrap=3,
@@ -378,7 +357,6 @@ for i in range(len(axes)):
 #    ax.set_ylim(bottom=0, top=1.1*max(df_pspec.loc[var,d]['Empirical'].loc[xmin:xmax].dropna()))
     ax.set_xlim(left=xmin, right=xmax)
     ax.set_xticks([-3,-2,-1,0,1,2,3])
-    ax.set_title('r = %.2f' % rVals[i])
     # AIC weights
     xpos=0.7
     ypos=0.9
@@ -407,69 +385,8 @@ for ax in axes[::3]:
 #for ax in axes[6:9]:
 #    ax.set_ylim(top=0.25)
 # Assign to plot label
-pspec_plot_breeding=g
+pspec_plot=g
 
-
-
-# Limits for x-axis
-xmin = -np.pi
-xmax = np.pi
-
-## Post-non-breeding population
-var = 'Post-non-breeding pop'
-g = sns.FacetGrid(df_pspec.loc[var].loc[rVals[0:-1:(int(len(rVals)/4))]].reset_index(level=['Growth rate','Frequency']), 
-                  col='Growth rate',
-                  col_wrap=3,
-                  sharey=False,
-                  aspect=1.5,
-                  height=1.8
-                  )
-# Plots
-plt.rc('axes', titlesize=10) 
-g.map(plt.plot, 'Frequency', 'Empirical', color='k', linewidth=1)
-g.map(plt.plot, 'Frequency', 'Fit null', color='g', linestyle='dashed', linewidth=1)
-g.map(plt.plot, 'Frequency', 'Fit fold', color='b', linestyle='dashed', linewidth=1)
-g.map(plt.plot, 'Frequency', 'Fit hopf', color='r', linestyle='dashed', linewidth=1)
-
-# Axes properties
-axes = g.axes
-# Global axes properties
-for i in range(len(axes)):
-    ax=axes[i]
-    r=rVals[i]
-#    ax.set_ylim(bottom=0, top=1.1*max(df_pspec.loc[var,d]['Empirical'].loc[xmin:xmax].dropna()))
-    ax.set_xlim(left=xmin, right=xmax)
-    ax.set_xticks([-3,-2,-1,0,1,2,3])
-    ax.set_title('r = %.2f' % rVals[i])
-    # AIC weights
-    xpos=0.7
-    ypos=0.9
-    ax.text(xpos,ypos,
-            '$w_f$ = %.1f' % df_ews.loc[var,r]['AIC fold'],
-            fontsize=9,
-            color='b',
-            transform=ax.transAxes)  
-    ax.text(xpos,ypos-0.12,
-            '$w_h$ = %.1f' % df_ews.loc[var,r]['AIC hopf'],
-            fontsize=9,
-            color='r',
-            transform=ax.transAxes)
-    ax.text(xpos,ypos-2*0.12,
-            '$w_n$ = %.1f' % df_ews.loc[var,r]['AIC null'],
-            fontsize=9,
-            color='g',
-            transform=ax.transAxes)
-# Y labels
-for ax in axes[::3]:
-    ax.set_ylabel('Power')
-    
-## Specific Y limits
-#for ax in axes[:4]:
-#    ax.set_ylim(top=0.004)
-#for ax in axes[6:9]:
-#    ax.set_ylim(top=0.25)
-# Assign to plot label
-pspec_plot_nonbreeding=g
 
 
 
@@ -481,12 +398,9 @@ pspec_plot_nonbreeding=g
 ## Export EWS data
 
 # Post-breeding season EWS DataFrame
-df_ews_x = df_ews.loc['Post-breeding pop']
-df_ews_x.to_csv('data_export/'+dir_name+'/ews_x.csv')
+df_ews_x = df_ews.loc['Pop']
+df_ews_x.to_csv('data_export/'+dir_name+'/ews.csv')
 
-# Post non-breeding season EWS DataFrame
-df_ews_y = df_ews.loc['Post-non-breeding pop']
-df_ews_y.to_csv('data_export/'+dir_name+'/ews_y.csv')
 
 
 ### Export power spectrum (empirical data)
