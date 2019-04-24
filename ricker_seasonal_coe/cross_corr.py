@@ -36,7 +36,6 @@ df_series = pd.DataFrame(xVals, index=tVals)
 def cross_corr(df_series,
             roll_window=0.4,
             span=0.1,
-            band_width=0.2,
             upto='Full'):
     '''
     Compute cross correlation between two time-series
@@ -69,8 +68,8 @@ def cross_corr(df_series,
     
     # Initialise a DataFrame to store EWS data
     df_ews = pd.DataFrame()
-    df_ews['State 1'] = df_series[0]
-    df_ews['State 2'] = df_series[1]
+    df_ews['State 1'] = df_series.iloc[:,0]
+    df_ews['State 2'] = df_series.iloc[:,1]
     df_ews.index = df_series.index
     df_ews.index.rename('Time', inplace=True)
     

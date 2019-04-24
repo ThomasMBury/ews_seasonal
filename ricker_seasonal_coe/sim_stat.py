@@ -25,9 +25,10 @@ import os
 
 # EWS module
 import sys
-sys.path.append('../../early_warnings')
-from ews_compute import ews_compute
+sys.path.append('../../ewstools')
+from ewstools import ewstools
 
+from cross_corr import cross_corr
 
 #----------------------
 # Useful functions
@@ -45,7 +46,7 @@ def apply_inplace(df, field, fun):
 #–----------------------
 
 # Name of directory within data_export
-dir_name = 'ews_stat'
+dir_name = 'ews_stat_temp'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -67,7 +68,7 @@ seed = 0 # random number generation seed
 rbif = 3.077 # flip bifurcation (from MMA bif file)
 rl = 0 # low r value
 rh = 5 # high r value
-rinc = 0.05 # amount to increment r by
+rinc = 0.1 # amount to increment r by
 
 
 
@@ -120,7 +121,7 @@ def de_fun(state, control, params):
 kb = 224 # carrying capacity in breeding period
 knb = -84.52 # carrying capacity in non-breeding period
 rnb = -0.0568 # growth rate in non-breeding period
-a = 0.0031 # regulates the strenght of COEs
+a = 0.0031 # regulates the strength of COEs
 
 
 # Parameter list
@@ -239,10 +240,10 @@ appended_pspec = []
 # loop through realisation number
 print('\nBegin EWS computation\n')
 for r in rVals:
-    # loop through sate variable
+    # loop through state variable
     for var in ['Post-breeding pop', 'Post-non-breeding pop']:
         
-        ews_dic = ews_compute(df_traj_filt.loc[r][var], 
+        ews_dic = ewstools.ews_compute(df_traj_filt.loc[r][var], 
                           roll_window = rw, 
                           band_width = bw,
                           lag_times = lags, 
@@ -257,16 +258,25 @@ for r in rVals:
         # The DataFrame of power spectra
         df_pspec_temp = ews_dic['Power spectrum']
         
+        # Compute cross-correlation
+        df_cross_corr = cross_corr(df_traj_filt.loc[r][['Post-breeding pop','Post-non-breeding pop']],
+                                   roll_window = rw,
+                                   span = 1)
+        series_cross_corr = df_cross_corr['EWS metrics']['Cross correlation']
+        
+        
         # Include a column in the DataFrames for r value and variable
         df_ews_temp['Growth rate'] = r
         df_ews_temp['Variable'] = var
+        df_ews_temp['Cross correlation'] = series_cross_corr
         
         df_pspec_temp['Growth rate'] = r
         df_pspec_temp['Variable'] = var
-                
+        
         # Add DataFrames to list
         appended_ews.append(df_ews_temp)
         appended_pspec.append(df_pspec_temp)
+                                      
         
     # Print status every realisation
     print('EWS for r =  '+str(r)+' complete')
