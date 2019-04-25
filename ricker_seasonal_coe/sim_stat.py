@@ -68,7 +68,7 @@ seed = 0 # random number generation seed
 rbif = 3.077 # flip bifurcation (from MMA bif file)
 rl = 0 # low r value
 rh = 5 # high r value
-rinc = 0.1 # amount to increment r by
+rinc = 0.02 # amount to increment r by
 
 
 
@@ -346,12 +346,6 @@ df_ews.loc['Post-non-breeding pop'][['Smax']].plot(ax=axes[3],secondary_y=True)
 df_ews.loc['Post-breeding pop'][['AIC hopf']].plot(ax=axes[4], ylim=(0,1.1))
 df_ews.loc['Post-non-breeding pop'][['AIC hopf']].plot(ax=axes[4],
           secondary_y=True, ylim=(0,1.1))
-
-
-
-
-
-
 
 
 
