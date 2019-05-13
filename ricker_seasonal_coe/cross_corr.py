@@ -105,7 +105,7 @@ def cross_corr(df_series,
         
     
     # Compute the rolling window size (integer value)
-    rw_size=int(np.floor(roll_window * df_short_series.shape[0]))
+    rw_size=int(np.floor(roll_window * df_series.shape[0]))
     
     
     # Compute cross correlation between residual time-series
