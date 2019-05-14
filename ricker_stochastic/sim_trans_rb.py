@@ -5,8 +5,8 @@ Created on Tue Nov 20 16:41:47 2018
 
 @author: Thomas Bury
 
-Simulate transient simulations of the seasonal Ricker model as Knb is reduced towards
-the transcritical bifurcation.
+Simulate transient simulations of the seasonal Ricker model undergoing the
+Flip bifurcation as rb is increased.
 
 """
 
@@ -29,7 +29,7 @@ from cross_corr import cross_corr
 #–----------------------
 
 # Name of directory within data_export
-dir_name = 'ricker_trans_knb'
+dir_name = 'ricker_trans_rb'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -45,19 +45,19 @@ dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
 tmax = 400
 tburn = 100 # burn-in period
-numSims = 1
-seed = 1 # random number generation seed
+numSims = 5
+seed = 0 # random number generation seed
 
 
 # EWS parameters
 dt2 = 1 # spacing between time-series for EWS computation
 rw = 0.4 # rolling window
-span = 0.2 # Lowess span
+span = 0.5 # Lowess span
 lags = [1,2,3] # autocorrelation lag times
 ews = ['var','ac','sd','cv','skew','kurt','smax','aic','cf'] # EWS to compute
 ham_length = 80 # number of data points in Hamming window
 ham_offset = 0.5 # proportion of Hamming window to offset by upon each iteration
-pspec_roll_offset = 10 # offset for rolling window when doing spectrum metrics
+pspec_roll_offset = 20 # offset for rolling window when doing spectrum metrics
 
 
 #----------------------------------
@@ -68,20 +68,19 @@ pspec_roll_offset = 10 # offset for rolling window when doing spectrum metrics
 
 # Model parameters
     
-rb = 1     # Growth rate for breeding period
+#rb = 1     # Growth rate for breeding period
 kb = 200    # Carrying capacity for breeding period
-v=0.01     # Rate at which knb decays
-#knb = 70   # Carrying capacity for non-breeding period
+knb = 70   # Carrying capacity for non-breeding period
 rnb = 0.1     # Growth rate for non-breeding period
 a = 0.001     # Effect of non-breeding density on breeding output (COE)
-sig1 = 0.2     # Noise amplitude in breeding dyanmics
-sig2 = 0.2   # Noise amplitude in non-breeding dynamics
+sig1 = 0.1     # Noise amplitude in breeding dyanmics
+sig2 = 0.1    # Noise amplitude in non-breeding dynamics
 
 
-# Bifurcation parameter - knb - decreases exponentially
-knl = 0
-knbh = 70
-knbcrit = 0
+# Bifurcation parameter
+rbl = 1
+rbh = 3.5
+rbcrit = 2.85
 
 # Function dynamic - outputs the subsequent state
 def de_fun(state, control, params, noise):
@@ -96,9 +95,9 @@ def de_fun(state, control, params, noise):
         
     
     [x, y] = state   # x (y) population after breeding (non-breeding) period
-    [rb, kb, rnb, a] = params
+    [kb, knb, rnb, a] = params
     [eps1, eps2] = noise
-    knb = control
+    rb = control
     
     # Compute pop size after breeding period season t+1
     xnew = y * np.exp((rb - a*x) * (1-y/kb) + eps1)
@@ -109,26 +108,26 @@ def de_fun(state, control, params, noise):
     return np.array([xnew, ynew])
     
 # Parameter list
-params = [rb, kb, rnb, a]
+params = [kb, knb, rnb, a]
  
 
 # Initialise arrays to store time-series data
 t = np.arange(t0,tmax,dt)
 s = np.zeros([len(t),2])
    
-# Set bifurcation parameter knb, that decreases exponentially in time from bl to bh
-b = pd.Series(knbh*(1-v)**t, index=t)
-## Time at which bifurcation occurs
-#tcrit = b[b > rbcrit].index[1]
+# Set bifurcation parameter b, that increases linearly in time from bl to bh
+b = pd.Series(np.linspace(rbl,rbh,len(t)),index=t)
+# Time at which bifurcation occurs
+tcrit = b[b > rbcrit].index[1]
 
 
 # Initial conditions
 x0 = kb
-y0 = x0 * np.exp(rnb * (1-x0/knbh))
+y0 = x0 * np.exp(rnb * (1-x0/knb))
 s0 = [x0, y0]
 
 
-## Implement Euler Maryuyama for stochastic simulation
+## Implement Euler Maryuyama for stocahstic simulation
 
 # Set seed
 np.random.seed(seed)
@@ -147,7 +146,7 @@ for j in range(numSims):
     
     # Run burn-in period on s0
     for i in range(int(tburn/dt)):
-        s0 = de_fun(s0, knbh, params, dW_burn[i])
+        s0 = de_fun(s0, rbl, params, dW_burn[i])
         
     # Initial condition post burn-in period
     s[0] = s0
@@ -205,7 +204,7 @@ for i in range(numSims):
                           ham_length = ham_length,
                           ham_offset = ham_offset,
                           pspec_roll_offset = pspec_roll_offset,
-                          upto='Full',
+                          upto=tcrit,
                           sweep=False)
         
         # The DataFrame of EWS
@@ -219,7 +218,7 @@ for i in range(numSims):
         df_cross_corr = cross_corr(df_traj_filt.loc[i+1][['x','y']],
                                    roll_window = rw,
                                    span = span,
-                                   upto='Full')
+                                   upto=tcrit)
         series_cross_corr = df_cross_corr['EWS metrics']['Cross correlation']
         
         
@@ -274,31 +273,14 @@ df_ktau = pd.concat(appended_ktau).reset_index().set_index(['Realisation number'
 plot_num = 1
 var = 'x'
 ## Plot of trajectory, smoothing and EWS of var (x or y)
-fig1, axes = plt.subplots(nrows=5, ncols=1, sharex=True, figsize=(6,6))
+fig1, axes = plt.subplots(nrows=4, ncols=1, sharex=True, figsize=(6,6))
 df_ews.loc[plot_num,var][['State variable','Smoothing']].plot(ax=axes[0],
           title='Early warning signals for a single realisation')
 df_ews.loc[plot_num,var]['Variance'].plot(ax=axes[1],legend=True)
-df_ews.loc[plot_num,var][['Lag-1 AC','Lag-2 AC']].plot(ax=axes[1], secondary_y=True,legend=True)
-df_ews.loc[plot_num,var][['Coefficient of variation']].plot(ax=axes[2])
-df_ews.loc[plot_num,var]['Smax'].dropna().plot(ax=axes[3],legend=True)
-df_ews.loc[plot_num,var]['Coherence factor'].dropna().plot(ax=axes[3], secondary_y=True, legend=True)
-df_ews.loc[plot_num,var][['AIC fold','AIC hopf','AIC null']].plot(ax=axes[4],legend=True, marker='o')
-
-
-# Realisation number to plot
-plot_num = 1
-var = 'y'
-## Plot of trajectory, smoothing and EWS of var (x or y)
-fig2, axes = plt.subplots(nrows=5, ncols=1, sharex=True, figsize=(6,6))
-df_ews.loc[plot_num,var][['State variable','Smoothing']].plot(ax=axes[0],
-          title='Early warning signals for a single realisation')
-df_ews.loc[plot_num,var]['Variance'].plot(ax=axes[1],legend=True)
-df_ews.loc[plot_num,var][['Lag-1 AC','Lag-2 AC']].plot(ax=axes[1], secondary_y=True,legend=True)
-df_ews.loc[plot_num,var][['Coefficient of variation']].plot(ax=axes[2])
-df_ews.loc[plot_num,var]['Smax'].dropna().plot(ax=axes[3],legend=True)
-df_ews.loc[plot_num,var]['Coherence factor'].dropna().plot(ax=axes[3], secondary_y=True, legend=True)
-df_ews.loc[plot_num,var][['AIC fold','AIC hopf','AIC null']].plot(ax=axes[4],legend=True, marker='o')
-
+df_ews.loc[plot_num,var][['Lag-1 AC','Lag-2 AC','Lag-3 AC']].plot(ax=axes[1], secondary_y=True,legend=True)
+df_ews.loc[plot_num,var]['Smax'].dropna().plot(ax=axes[2],legend=True)
+df_ews.loc[plot_num,var]['Coherence factor'].dropna().plot(ax=axes[2], secondary_y=True, legend=True)
+df_ews.loc[plot_num,var][['AIC fold','AIC hopf','AIC null']].plot(ax=axes[3],legend=True, marker='o')
 
 
 ## Define function to make grid plot for evolution of the power spectrum in time
@@ -335,8 +317,9 @@ plot_pspec = plot_pspec_grid(t_display, plot_num, 'x')
 
 
 
-## Box plot to visualise kendall tau values
-#df_ktau[['Variance','Lag-1 AC','Lag-2 AC','Smax','Cross correlation']].boxplot()
+# Box plot to visualise kendall tau values
+df_ktau[['Variance','Lag-1 AC','Lag-2 AC','Smax','Cross correlation']].boxplot()
+
 
 
 
