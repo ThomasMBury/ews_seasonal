@@ -5,11 +5,8 @@ Created on Tue Nov 20 16:41:47 2018
 
 @author: Thomas Bury
 
-Simulate transient simulations of the seasonal Ricker with 
-stochasticity from first principles undergoing the
-Flip bifurcation as rb is increased.
-
-
+Simulate transient simulations of the Ricker model going to extinction as the
+growth rate goes below 1.
 
 """
 
@@ -19,8 +16,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
-from scipy.stats import poisson
-from scipy.stats import nbinom
 
 # import ewstools
 from ewstools import ewstools
@@ -34,7 +29,7 @@ from cross_corr import cross_corr
 #–----------------------
 
 # Name of directory within data_export
-dir_name = 'ricker_trans_rb'
+dir_name = 'ricker_trans_rext'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -51,7 +46,7 @@ t0 = 0
 tmax = 400
 tburn = 100 # burn-in period
 numSims = 1
-seed = 0 # random number generation seed
+seed = 1 # random number generation seed
 
 
 # EWS parameters
@@ -62,7 +57,7 @@ lags = [1,2,3] # autocorrelation lag times
 ews = ['var','ac','sd','cv','skew','kurt','smax','aic','cf'] # EWS to compute
 ham_length = 80 # number of data points in Hamming window
 ham_offset = 0.5 # proportion of Hamming window to offset by upon each iteration
-pspec_roll_offset = 20 # offset for rolling window when doing spectrum metrics
+pspec_roll_offset = 10 # offset for rolling window when doing spectrum metrics
 
 
 #----------------------------------
@@ -73,26 +68,18 @@ pspec_roll_offset = 20 # offset for rolling window when doing spectrum metrics
 
 # Model parameters
     
-#rb = 1     # Growth rate for breeding period
-kb = 200    # Carrying capacity for breeding period
-knb = 70   # Carrying capacity for non-breeding period
-rnb = 0.1     # Growth rate for non-breeding period
-a = 0.001     # Effect of non-breeding density on breeding output (COE)
-sig1 = 0     # Noise amplitude in breeding dyanmics
-sig2 = 0    # Noise amplitude in non-breeding dynamics
-ke = 50     # Env noise parameter
+gamma = 1/200	# Strength of density dependent effects
+amp_dem = 0.1    # Demographic noise amplitude
+amp_env = 0.1	# Environmental noise amplitude
 
 
 # Bifurcation parameter
-rbl = 1
-rbh = 3.5
-rbcrit = 2.85
+rl = -0.2
+rh = 1
+rcrit = 0
 
 # Function dynamic - outputs the subsequent state
-# The model goes through a Poisson distibution to determine the next state
-
-
-def de_fun(state, control, params, noise):
+def de_fun(state, control, noise):
     '''
     Inputs:
         state: array of state variables [x,y]
@@ -103,47 +90,31 @@ def de_fun(state, control, params, noise):
     '''
         
     
-    [x, y] = state   # x (y) population after breeding (non-breeding) period
-    [kb, knb, rnb, a] = params
-    [eps1, eps2] = noise
-    rb = control
+    x = state   # x population size
+    [eps_dem, eps_env] = noise
+    r = control
     
     # Compute pop size after breeding period season t+1
-    
-    # Parameters for negative binomial distribution
-    mu = y * np.exp((rb - a*x) * (1-y/kb))
-    p = ke / (ke + mu)
-    
-    # Compute pop size
-    xnew = nbinom.rvs(ke, p)
-    # Compute pop size after non-breeding period season t+1
-    
-    ## Parameters for negative binomial distribution
-    mu = xnew * np.exp(rnb * (1-xnew/knb))
-    p = ke / (ke + mu)
-    ynew = nbinom.rvs(ke, p)
+    xnew = x * np.exp(r - gamma * x) + eps_dem*np.sqrt(x) + eps_env*x
     
     # Ouput updated state        
-    return np.array([xnew, ynew])
+    return xnew
     
-# Parameter list
-params = [kb, knb, rnb, a]
  
 
 # Initialise arrays to store time-series data
 t = np.arange(t0,tmax,dt)
-s = np.zeros([len(t),2])
+s = np.zeros(len(t))
    
 # Set bifurcation parameter b, that increases linearly in time from bl to bh
-b = pd.Series(np.linspace(rbl,rbh,len(t)),index=t)
+b = pd.Series(np.linspace(rh, rl, len(t)),index=t)
 # Time at which bifurcation occurs
-tcrit = b[b > rbcrit].index[1]
+tcrit = b[b < rcrit].index[1]
 
 
 # Initial conditions
-x0 = kb
-y0 = x0 * np.exp(rnb * (1-x0/knb))
-s0 = [x0, y0]
+x0 = rh/gamma
+s0 = x0
 
 
 ## Implement Euler Maryuyama for stocahstic simulation
@@ -160,27 +131,26 @@ for j in range(numSims):
     
     
     # Create brownian increments (s.d. sigma*sqrt(dt) )
-    dW_burn = np.random.normal(loc=0, scale=np.sqrt(dt), size = (int(tburn/dt),2))*np.array([sig1,sig2])
-    dW = np.random.normal(loc=0, scale=np.sqrt(dt), size = (len(t),2))*np.array([sig1,sig2])
+    dW_burn = np.random.normal(loc=0, scale=np.sqrt(dt), size = (int(tburn/dt),2))*np.array([amp_dem,amp_env])
+    dW = np.random.normal(loc=0, scale=np.sqrt(dt), size = (len(t),2))*np.array([amp_dem,amp_env])
     
     # Run burn-in period on s0
     for i in range(int(tburn/dt)):
-        s0 = de_fun(s0, rbl, params, dW_burn[i])
+        s0 = de_fun(s0, rh, dW_burn[i])
         
     # Initial condition post burn-in period
     s[0] = s0
     
     # Run simulation
     for i in range(len(t)-1):
-        s[i+1] = de_fun(s[i], b.iloc[i], params, dW[i])
+        s[i+1] = de_fun(s[i], b.iloc[i], dW[i])
         # make sure that state variable remains >= 0 
-        s[i+1] = [np.max([k,0]) for k in s[i+1]]
+        s[i+1] = np.max([s[i+1],0]) 
             
     # Store series data in a temporary DataFrame
     data = {'Realisation number': (j+1)*np.ones(len(t)),
                 'Time': t,
-                'x': s[:,0],
-                'y': s[:,1]}
+                'x': s}
     df_temp = pd.DataFrame(data)
     # Append to list
     list_traj_append.append(df_temp)
@@ -212,7 +182,7 @@ appended_ktau = []
 print('\nBegin EWS computation\n')
 for i in range(numSims):
     # loop through variable
-    for var in ['x','y']:
+    for var in ['x']:
         
         ews_dic = ewstools.ews_compute(df_traj_filt.loc[i+1][var], 
                           roll_window = rw,
@@ -232,19 +202,11 @@ for i in range(numSims):
         df_pspec_temp = ews_dic['Power spectrum']
         # The DataFrame of kendall tau values
         df_ktau_temp = ews_dic['Kendall tau']
-        
-        # Compute cross-correlation
-        df_cross_corr = cross_corr(df_traj_filt.loc[i+1][['x','y']],
-                                   roll_window = rw,
-                                   span = span,
-                                   upto=tcrit)
-        series_cross_corr = df_cross_corr['EWS metrics']['Cross correlation']
-        
+       
         
         # Include a column in the DataFrames for realisation number and variable
         df_ews_temp['Realisation number'] = i+1
         df_ews_temp['Variable'] = var
-        df_ews_temp['Cross correlation'] = series_cross_corr
 
         
         df_pspec_temp['Realisation number'] = i+1
@@ -253,7 +215,6 @@ for i in range(numSims):
 
         df_ktau_temp['Realisation number'] = i+1
         df_ktau_temp['Variable'] = var
-        df_ktau_temp['Cross correlation'] = df_cross_corr['Kendall tau'].iloc[0,0]
                 
         
         # Add DataFrames to list
@@ -292,14 +253,16 @@ df_ktau = pd.concat(appended_ktau).reset_index().set_index(['Realisation number'
 plot_num = 1
 var = 'x'
 ## Plot of trajectory, smoothing and EWS of var (x or y)
-fig1, axes = plt.subplots(nrows=4, ncols=1, sharex=True, figsize=(6,6))
+fig1, axes = plt.subplots(nrows=3, ncols=1, sharex=True, figsize=(6,6))
 df_ews.loc[plot_num,var][['State variable','Smoothing']].plot(ax=axes[0],
           title='Early warning signals for a single realisation')
-df_ews.loc[plot_num,var]['Variance'].plot(ax=axes[1],legend=True)
-df_ews.loc[plot_num,var][['Lag-1 AC','Lag-2 AC','Lag-3 AC']].plot(ax=axes[1], secondary_y=True,legend=True)
-df_ews.loc[plot_num,var]['Smax'].dropna().plot(ax=axes[2],legend=True)
-df_ews.loc[plot_num,var]['Coherence factor'].dropna().plot(ax=axes[2], secondary_y=True, legend=True)
-df_ews.loc[plot_num,var][['AIC fold','AIC hopf','AIC null']].plot(ax=axes[3],legend=True, marker='o')
+df_ews.loc[plot_num,var]['Coefficient of variation'].plot(ax=axes[1],legend=True)
+df_ews.loc[plot_num,var][['Lag-1 AC']].plot(ax=axes[1], secondary_y=True,legend=True)
+df_ews.loc[plot_num,var]['Skewness'].plot(ax=axes[2],legend=True)
+
+plt.savefig('figures/ews_trans_r_ext.png')
+
+
 
 
 ## Define function to make grid plot for evolution of the power spectrum in time
@@ -335,11 +298,11 @@ plot_pspec = plot_pspec_grid(t_display, plot_num, 'x')
 
 
 
-#
+
 ## Box plot to visualise kendall tau values
 #df_ktau[['Variance','Lag-1 AC','Lag-2 AC','Smax','Cross correlation']].boxplot()
 #
-
+#
 
 
 
@@ -353,17 +316,17 @@ plot_pspec = plot_pspec_grid(t_display, plot_num, 'x')
 #plot_pspec.savefig('figures/pspec_evol.png', dpi=200)
 
 
-
-## Export the first 5 realisations to see individual behaviour
-# EWS DataFrame (includes trajectories)
-df_ews.loc[:5].to_csv('data_export/'+dir_name+'/ews_singles.csv')
-# Power spectrum DataFrame (only empirical values)
-df_pspec.loc[:5,'Empirical'].dropna().to_csv('data_export/'+dir_name+'/pspecs.csv',
-            header=True)
-
-
-# Export kendall tau values
-df_ktau.to_csv('data_export/'+dir_name+'/ktau.csv')
+# 
+# ## Export the first 5 realisations to see individual behaviour
+# # EWS DataFrame (includes trajectories)
+# df_ews.loc[:5].to_csv('data_export/'+dir_name+'/ews_singles.csv')
+# # Power spectrum DataFrame (only empirical values)
+# df_pspec.loc[:5,'Empirical'].dropna().to_csv('data_export/'+dir_name+'/pspecs.csv',
+#             header=True)
+# 
+# 
+# # Export kendall tau values
+# df_ktau.to_csv('data_export/'+dir_name+'/ktau.csv')
 
 
     
