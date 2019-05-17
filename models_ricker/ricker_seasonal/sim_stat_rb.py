@@ -5,7 +5,7 @@ Created on Thu Jan 28 18:04:51 2019
 
 
 Code to simulate seasonal Ricker model at different values of rb
-Stationary simulations (fixed paramters)
+Stationary simulations (fixed paramters).
 
 @author: ThomasMBury
 """
