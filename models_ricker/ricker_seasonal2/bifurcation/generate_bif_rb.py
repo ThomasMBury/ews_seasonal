@@ -19,8 +19,8 @@ from numba import jit
 
 
 # Fixed system parameters
-alpha_b = 1/250 # density dependent effects in breeding period
-alpha_nb = 1/250 # density dependent effects in non-breeding period
+alpha_b = 1/500 # density dependent effects in breeding period
+alpha_nb = 1/500 # density dependent effects in non-breeding period
 
 
 
@@ -28,7 +28,7 @@ alpha_nb = 1/250 # density dependent effects in non-breeding period
 # Setup bifurcation diagram varying breeding growth rate
 
 
-rnb = -0.01 # growth rate in non-breeding period
+rnb = -0.05 # growth rate in non-breeding period
 
 # Difference equation for breeding population size
 @jit(nopython=True)
@@ -78,8 +78,8 @@ def ricker_nb(y, rb):
 
 
 # Simulate to get bifurcation points
-bif_data_x = simulate(model=ricker_b, num_gens=100, rate_min=-0.5, rate_max=5, num_rates=1000, num_discard=100)
-bif_data_y = simulate(model=ricker_nb, num_gens=100, rate_min=-0.5, rate_max=5, num_rates=1000, num_discard=100)
+bif_data_x = simulate(model=ricker_b, num_gens=100, rate_min=-0.5, rate_max=2, num_rates=1000, num_discard=100)
+bif_data_y = simulate(model=ricker_nb, num_gens=100, rate_min=-0.5, rate_max=2, num_rates=1000, num_discard=100)
 
 
 # Bifurcation plot

@@ -5,8 +5,8 @@ Created on Tue Nov 20 16:41:47 2018
 
 @author: Thomas Bury
 
-Simulate transient simulations of the seasonal Ricker model undergoing the
-Flip bifurcation as rb is increased.
+Simulate transient simulations of the seasonal Ricker model undergoing the 
+Transcritical bifurcation to extinction as rb is decreased.
 
 """
 
@@ -14,7 +14,6 @@ Flip bifurcation as rb is increased.
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 import os
 
 # import ewstools
@@ -29,7 +28,7 @@ from cross_corr import cross_corr
 #–----------------------
 
 # Name of directory within data_export
-dir_name = 'ricker_trans_rnb'
+dir_name = 'ricker_trans_rb'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -44,9 +43,9 @@ if not os.path.exists('data_export/'+dir_name):
 dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
 tmax = 200
-tburn = 100 # burn-in period
+tburn = 200 # burn-in period
 numSims = 1
-seed = 0 # random number generation seed
+seed = 1 # random number generation seed
 
 
 # EWS parameters
@@ -68,23 +67,23 @@ pspec_roll_offset = 20 # offset for rolling window when doing spectrum metrics
 
 # Model parameters
     
-rb = 1     # Growth rate for breeding period
+rnb = 0     # Growth rate for breeding period
 alpha_b = 1/500 # density dependent effects in breeding period
 alpha_nb = 1/500 # density dependent effects in non-breeding period
-a = 0.001     # Effect of non-breeding density on breeding output (COE)
+
 
 # Noise parameters
-amp_dem_b = 0 # amplitude of demographic noise
-amp_dem_nb = 0
+amp_dem_b = 0.1 # amplitude of demographic noise
+amp_dem_nb = 0.1
 amp_env_b = 0.1 # amplitude of environmental noise
 amp_env_nb = 0.1
 
 
 
 # Bifurcation parameter
-rnb_l = -1.2
-rnb_h = 0
-rnb_crit = -1
+rb_l = -0.1
+rb_h = 1
+rb_crit = 0
 
 
 # Function dynamic - outputs the subsequent state
@@ -100,11 +99,11 @@ def de_fun(state, control, params, noise):
         
     
     [x, y] = state   # x (y) population after breeding (non-breeding) period
-    [alpha_b, alpha_nb, rb] = params
-    rnb = control
+    [alpha_b, alpha_nb, rnb] = params
+    rb = control
     
     # Compute pop size after breeding period season t+1
-    xnew = y * np.exp(rb - alpha_b * y ) + amp_dem_b*np.sqrt(y)*noise[0] + amp_env_b*y*noise[1]
+    xnew = y * np.exp(rb - alpha_b * y ) + amp_dem_b*np.sqrt(abs(y))*noise[0] + amp_env_b*y*noise[1]
     # Compute pop size after non-breeding period season t+1
     ynew =  xnew * np.exp(rnb - alpha_nb * xnew ) + amp_dem_nb*np.sqrt(abs(xnew))*noise[2] + amp_env_nb*xnew*noise[3]
     
@@ -113,7 +112,7 @@ def de_fun(state, control, params, noise):
     
 
 # Parameter list
-params = [alpha_b, alpha_nb, rb]
+params = [alpha_b, alpha_nb, rnb]
  
 
 # Initialise arrays to store time-series data
@@ -121,14 +120,14 @@ t = np.arange(t0,tmax,dt)
 s = np.zeros([len(t),2])
    
 # Set bifurcation parameter b, that increases decreases linearly from bh to bl
-b = pd.Series(np.linspace(rnb_h, rnb_l ,len(t)),index=t)
+b = pd.Series(np.linspace(rb_h, rb_l ,len(t)),index=t)
 # Time at which bifurcation occurs
-tcrit = b[b < rnb_crit].index[1]
+tcrit = b[b < rb_crit].index[1]
 
 
 # Initial conditions
-x0 = rb/alpha_b
-y0 = x0 * np.exp(rnb_h - alpha_nb * 0)
+x0 = rb_h/alpha_b
+y0 = x0 * np.exp(rnb - alpha_nb * 0)
 s0 = [x0, y0]
 
 
@@ -151,8 +150,9 @@ for j in range(numSims):
     
     # Run burn-in period on s0
     for i in range(int(tburn/dt)):
-        s0 = de_fun(s0, rnb_h, params, dW_burn[i])
-        
+        s0 = de_fun(s0, rb_h, params, dW_burn[i])
+        # make sure that state variable remains >= 0 
+        s0 = [np.max([k,0]) for k in s0]
     # Initial condition post burn-in period
     s[0] = s0
     

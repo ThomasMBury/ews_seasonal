@@ -14,7 +14,6 @@ Transcritical bifurcation to extinction as rnb is decreased.
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 import os
 
 # import ewstools
@@ -44,9 +43,9 @@ if not os.path.exists('data_export/'+dir_name):
 dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
 tmax = 200
-tburn = 100 # burn-in period
+tburn = 200 # burn-in period
 numSims = 1
-seed = 0 # random number generation seed
+seed = 1 # random number generation seed
 
 
 # EWS parameters
@@ -74,8 +73,8 @@ alpha_nb = 1/500 # density dependent effects in non-breeding period
 a = 0.001     # Effect of non-breeding density on breeding output (COE)
 
 # Noise parameters
-amp_dem_b = 0 # amplitude of demographic noise
-amp_dem_nb = 0
+amp_dem_b = 0.1 # amplitude of demographic noise
+amp_dem_nb = 0.1
 amp_env_b = 0.1 # amplitude of environmental noise
 amp_env_nb = 0.1
 
