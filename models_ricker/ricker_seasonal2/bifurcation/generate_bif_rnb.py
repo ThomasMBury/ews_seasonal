@@ -19,8 +19,8 @@ from numba import jit
 
 
 # Fixed system parameters
-alpha_b = 1/250 # density dependent effects in breeding period
-alpha_nb = 1/250 # density dependent effects in non-breeding period
+alpha_b = 1/500 # density dependent effects in breeding period
+alpha_nb = 1/500 # density dependent effects in non-breeding period
 
 
 #------------------------------
