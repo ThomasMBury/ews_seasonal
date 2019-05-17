@@ -23,21 +23,20 @@ alpha_b = 1/250 # density dependent effects in breeding period
 alpha_nb = 1/250 # density dependent effects in non-breeding period
 
 
-
 #------------------------------
-# Setup bifurcation diagram varying breeding growth rate
+# Setup bifurcation diagram varying non-breeding growth rate
 
 
-rnb = -0.01 # growth rate in non-breeding period
+rb = 1 # growth rate in breeding period
 
 # Difference equation for breeding population size
 @jit(nopython=True)
-def ricker_b(x, rb):
+def ricker_b(x, rnb):
     '''
     Annual iteration for population size after breeding season.
     Inputs:
         x - breeding population size
-        rb - growth rate during breeding season
+        rnb - growth rate during non-breeding season
     Ouptut:
         population size after the following breeding season.
     '''
@@ -55,12 +54,12 @@ def ricker_b(x, rb):
 
 # Difference equation for non-breeding population size
 @jit(nopython=True)
-def ricker_nb(y, rb):
+def ricker_nb(y, rnb):
     '''
     Annual iteration for population size after non-breeding season.
     Inputs:
         y - current population size after non-breeding season
-        rb - growth rate during breeding season
+        rnb - growth rate during breeding season
     Ouptut:
         population size after the following non-breeding season.
     '''
@@ -78,33 +77,17 @@ def ricker_nb(y, rb):
 
 
 # Simulate to get bifurcation points
-bif_data_x = simulate(model=ricker_b, num_gens=100, rate_min=-0.5, rate_max=5, num_rates=1000, num_discard=100)
-bif_data_y = simulate(model=ricker_nb, num_gens=100, rate_min=-0.5, rate_max=5, num_rates=1000, num_discard=100)
+bif_data_x = simulate(model=ricker_b, num_gens=100, rate_min=-1.25, rate_max=0, num_rates=1000, num_discard=100)
+bif_data_y = simulate(model=ricker_nb, num_gens=100, rate_min=-1.25, rate_max=0, num_rates=1000, num_discard=100)
 
 
 # Bifurcation plot
 bifurcation_plot(bif_data_x, title='Non-breeding population size',
-                 xmin=-0.5, xmax=5, ymin=0, ymax=500, save=False,
-                 xlabel='Breeding growth rate (rb)')
+                 xmin=-1.25, xmax=0, ymin=0, ymax=500, save=False,
+                 xlabel='Non-breeding growth rate (rnb)')
 bifurcation_plot(bif_data_y, title='Breeding population size',
-                 xmin=-0.5, xmax=5, ymin=0, ymax=500, save=False,
-                 xlabel='Breeding growth rate (rb)')
-
-
-
-
-
-
-
-
-
-
-
-## Export bifurcation points
-#bif_data_x.to_csv('../data_export/bif_data_x.csv')
-#bif_data_y.to_csv('../data_export/bif_data_y.csv')
-
-
+                 xmin=-1.25, xmax=0, ymin=0, ymax=500, save=False,
+                 xlabel='Non-breeding growth rate (rnb)')
 
 
 
