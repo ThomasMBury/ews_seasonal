@@ -45,7 +45,7 @@ t0 = 0
 tmax = 200
 tburn = 200 # burn-in period
 numSims = 1
-seed = 1 # random number generation seed
+seed = 2 # random number generation seed
 
 
 # EWS parameters
