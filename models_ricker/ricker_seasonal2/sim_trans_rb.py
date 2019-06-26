@@ -42,10 +42,10 @@ if not os.path.exists('data_export/'+dir_name):
 # Simulation parameters
 dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
-tmax = 200
+tmax = 500
 tburn = 200 # burn-in period
-numSims = 1
-seed = 2 # random number generation seed
+numSims = 4
+seed = 610 # random number generation seed
 
 
 # EWS parameters
@@ -67,9 +67,9 @@ pspec_roll_offset = 20 # offset for rolling window when doing spectrum metrics
 
 # Model parameters
     
-rnb = 0     # Growth rate for breeding period
-alpha_b = 1/500 # density dependent effects in breeding period
-alpha_nb = 1/500 # density dependent effects in non-breeding period
+rnb = -0.0568     # Growth rate for breeding period
+alpha_b = 0.01 # density dependent effects in breeding period
+alpha_nb = 0.000672 # density dependent effects in non-breeding period
 
 
 # Noise parameters
@@ -81,8 +81,8 @@ amp_env_nb = 0.1
 
 
 # Bifurcation parameter
-rb_l = -0.1
-rb_h = 1
+rb_l = -0.5
+rb_h = 2.24
 rb_crit = 0
 
 
@@ -291,33 +291,15 @@ axes[4].set_ylabel('Cross correlation')
 
 
 
-#
-#
-##------------------------------------
-### Export data 
-##-----------------------------------
-#
-### Export power spectrum evolution (grid plot)
-##plot_pspec.savefig('figures/pspec_evol.png', dpi=200)
-#
-#
-#
-### Export the first 5 realisations to see individual behaviour
-## EWS DataFrame (includes trajectories)
-#df_ews.loc[:5].to_csv('data_export/'+dir_name+'/ews_singles.csv')
-## Power spectrum DataFrame (only empirical values)
-#df_pspec.loc[:5,'Empirical'].dropna().to_csv('data_export/'+dir_name+'/pspecs.csv',
-#            header=True)
-#
-#
-## Export kendall tau values
-#df_ktau.to_csv('data_export/'+dir_name+'/ktau.csv')
-#
-#
-#    
+#------------------------------------
+## Export data 
+#-----------------------------------
 
 
 
+## Export EWS dataframe
+
+df_ews.to_csv('data_export/'+dir_name+'/ews.csv')
 
 
 

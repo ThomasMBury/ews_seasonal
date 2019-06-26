@@ -45,18 +45,18 @@ t0 = 0
 tmax = 200
 tburn = 200 # burn-in period
 numSims = 1
-seed = 1 # random number generation seed
+seed = 6 # random number generation seed
 
 
 # EWS parameters
 dt2 = 1 # spacing between time-series for EWS computation
-rw = 0.4 # rolling window
+rw = 0.2 # rolling window
 span = 0.5 # Lowess span
 lags = [1,2,3] # autocorrelation lag times
-ews = ['var','ac','sd','cv','skew','kurt'] # EWS to compute
+ews = ['var','ac','sd','cv','skew','kurt','smax','aic'] # EWS to compute
 ham_length = 80 # number of data points in Hamming window
 ham_offset = 0.5 # proportion of Hamming window to offset by upon each iteration
-pspec_roll_offset = 20 # offset for rolling window when doing spectrum metrics
+pspec_roll_offset = 10 # offset for rolling window when doing spectrum metrics
 
 
 #----------------------------------
@@ -67,10 +67,11 @@ pspec_roll_offset = 20 # offset for rolling window when doing spectrum metrics
 
 # Model parameters
     
-rb = 1     # Growth rate for breeding period
-alpha_b = 1/500 # density dependent effects in breeding period
-alpha_nb = 1/500 # density dependent effects in non-breeding period
-a = 0.001     # Effect of non-breeding density on breeding output (COE)
+rb = 2.24    # Growth rate for breeding period
+rnbEmp = -0.0568 # empirically measured rnb
+alpha_b = 0.01 # density dependent effects in breeding period
+alpha_nb = 0.000672 # density dependent effects in non-breeding period
+
 
 # Noise parameters
 amp_dem_b = 0.1 # amplitude of demographic noise
@@ -81,9 +82,9 @@ amp_env_nb = 0.1
 
 
 # Bifurcation parameter
-rnb_l = -1.2
-rnb_h = 0
-rnb_crit = -1
+rnb_l = -2.5
+rnb_h = rnbEmp
+rnb_crit = -2.24
 
 
 # Function dynamic - outputs the subsequent state
@@ -113,7 +114,6 @@ def de_fun(state, control, params, noise):
 
 # Parameter list
 params = [alpha_b, alpha_nb, rb]
- 
 
 # Initialise arrays to store time-series data
 t = np.arange(t0,tmax,dt)
@@ -186,8 +186,6 @@ df_traj.set_index(['Realisation number','Time'], inplace=True)
 # ---------------------
 
 
-# Filter time-series to have time-spacing dt2
-df_traj_filt = df_traj.loc[::int(dt2/dt)]
 
 # set up a list to store output dataframes from ews_compute- we will concatenate them at the end
 appended_ews = []
@@ -199,7 +197,13 @@ for i in range(numSims):
     # loop through variable
     for var in ['Non-breeding','Breeding']:
         
-        ews_dic = ewstools.ews_compute(df_traj_filt.loc[i+1][var], 
+        # Time-series
+        series=df_traj.loc[i+1][var]
+        
+        # Find time value at which population goes extinct
+        tExt=series[series<=0].index[0]
+        
+        ews_dic = ewstools.ews_compute(df_traj.loc[i+1][var], 
                           roll_window = rw,
                           smooth='Lowess',
                           span=span,
@@ -208,7 +212,7 @@ for i in range(numSims):
                           ham_length = ham_length,
                           ham_offset = ham_offset,
                           pspec_roll_offset = pspec_roll_offset,
-                          upto=tcrit,
+                          upto=tExt-5,
                           sweep=False)
         
         # The DataFrame of EWS
@@ -217,10 +221,10 @@ for i in range(numSims):
         df_ktau_temp = ews_dic['Kendall tau']
         
         # Compute cross-correlation
-        df_cross_corr = cross_corr(df_traj_filt.loc[i+1][['Non-breeding','Breeding']],
+        df_cross_corr = cross_corr(df_traj.loc[i+1][['Non-breeding','Breeding']],
                                    roll_window = rw,
                                    span = span,
-                                   upto=tcrit)
+                                   upto=tExt-5)
         series_cross_corr = df_cross_corr['EWS metrics']['Cross correlation']
         
         
@@ -267,21 +271,28 @@ df_ktau = pd.concat(appended_ktau).reset_index().set_index(['Realisation number'
 # Realisation number to plot
 plot_num = 1
 ## Plot of trajectory, smoothing and EWS of var (x or y)
-fig1, axes = plt.subplots(nrows=5, ncols=1, sharex=True, figsize=(6,8))
+fig1, axes = plt.subplots(nrows=7, ncols=1, sharex=True, figsize=(6,8))
 df_ews.loc[plot_num]['State variable'].unstack(level=0).plot(ax=axes[0],
           title='Early warning signals for a single realisation')
 df_ews.loc[plot_num]['Coefficient of variation'].unstack(level=0).plot(ax=axes[1],legend=False)
 df_ews.loc[plot_num]['Lag-1 AC'].unstack(level=0).plot(ax=axes[2], legend=False)
 df_ews.loc[plot_num]['Skewness'].dropna().unstack(level=0).plot(ax=axes[3], legend=False)
-df_ews.loc[plot_num,'Breeding']['Cross correlation'].plot(ax=axes[4], legend=False)
+df_ews.loc[plot_num]['Kurtosis'].dropna().unstack(level=0).plot(ax=axes[4], legend=False)
+df_ews.loc[plot_num,'Breeding']['Cross correlation'].plot(ax=axes[5], legend=False)
+df_ews.loc[plot_num]['AIC hopf'].dropna().unstack(level=0).plot(ax=axes[6], legend=False)
+
+
 
 axes[0].set_ylabel('Population')
 axes[0].legend(title=None)
 axes[1].set_ylabel('CoV')
 axes[2].set_ylabel('Lag-1 AC')
 axes[3].set_ylabel('Skewness')
-axes[4].set_ylabel('Cross correlation')
+axes[4].set_ylabel('Kurtosis')
+axes[5].set_ylabel('Cross correlation')
+axes[6].set_ylabel('AIC hopf')
 
+axes[6].set_xlim(0,tmax)
 
 ## Box plot to visualise kendall tau values
 #df_ktau[['Coefficient of variation','Lag-1 AC','Skewness','Cross correlation']].boxplot()
@@ -290,30 +301,22 @@ axes[4].set_ylabel('Cross correlation')
 
 
 
-#
-#
-##------------------------------------
-### Export data 
-##-----------------------------------
-#
-### Export power spectrum evolution (grid plot)
-##plot_pspec.savefig('figures/pspec_evol.png', dpi=200)
-#
-#
-#
-### Export the first 5 realisations to see individual behaviour
-## EWS DataFrame (includes trajectories)
-#df_ews.loc[:5].to_csv('data_export/'+dir_name+'/ews_singles.csv')
-## Power spectrum DataFrame (only empirical values)
-#df_pspec.loc[:5,'Empirical'].dropna().to_csv('data_export/'+dir_name+'/pspecs.csv',
-#            header=True)
-#
-#
-## Export kendall tau values
-#df_ktau.to_csv('data_export/'+dir_name+'/ktau.csv')
-#
-#
-#    
+
+
+#------------------------------------
+## Export data 
+#-----------------------------------
+
+
+
+## Export EWS dataframe
+
+df_ews.to_csv('data_export/'+dir_name+'/ews.csv')
+
+
+
+
+    
 
 
 

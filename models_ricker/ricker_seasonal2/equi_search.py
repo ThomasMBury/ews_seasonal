@@ -59,8 +59,8 @@ def find_equi(rb, rnb):
     
     # Parameters
     s0 = [400,200] # Initial condition
-    tmax = 400     # Time steps to simulate
-    eps = 2     # Error margin required for equilibria convergence
+    tmax = 2000     # Time steps to simulate
+    eps = 0.1    # Error margin required for equilibria convergence
     
     # Set up
     tVals = np.arange(0,tmax+1,1)
@@ -73,7 +73,11 @@ def find_equi(rb, rnb):
         
     
     if abs(np.linalg.norm(s[-1]) - np.linalg.norm(s[-2])) < eps:
-        return s[-1]
+        if np.linalg.norm(s[-1]) < 0.01:
+            out = np.array([0,0])
+        else:
+            out = s[-1]
+        return out
     
     elif abs(np.linalg.norm(s[-1]) - np.linalg.norm(s[-3])) < eps:
         return ['Period-2 oscillations']*2
@@ -89,7 +93,7 @@ def find_equi(rb, rnb):
       
 # Growth parameters
 rbVals = np.arange(0,3.05,0.05)
-rnbVals = np.arange(-1,0.05,0.05)
+rnbVals = np.arange(-2,0.05,0.05)
 
 
 # Create a DataFrame to store values
@@ -104,6 +108,7 @@ for rb in rbVals:
         # Make a list 
         equi = find_equi(rb,rnb)
         list_temp.append([rb,rnb,equi[0],equi[1]])
+    print('Complete for rb = %.2f' %rb)
 
 
 # Put into a DataFrame
