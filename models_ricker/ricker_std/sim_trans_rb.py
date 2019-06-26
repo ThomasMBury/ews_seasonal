@@ -5,8 +5,8 @@ Created on Tue Nov 20 16:41:47 2018
 
 @author: Thomas Bury
 
-Simulate transient simulations of the Ricker model going to extinction as the
-growth rate goes below 1.
+Simulate transient simulations of the Ricker model (with dem and env noise) going to 
+extinction as the growth rate goes below 1.
 
 """
 
