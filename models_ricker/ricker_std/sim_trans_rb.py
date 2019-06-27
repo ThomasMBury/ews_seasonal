@@ -309,23 +309,20 @@ df_ews.loc[plot_num,var]['Skewness'].plot(ax=axes[5],legend=True)
 
 
 
-
+#
 #
 #------------------------------------
 ## Export data 
 #-----------------------------------
 
-#
-# ## Export the first 5 realisations to see individual behaviour
-# # EWS DataFrame (includes trajectories)
-# df_ews.loc[:5].to_csv('data_export/'+dir_name+'/ews_singles.csv')
-# # Power spectrum DataFrame (only empirical values)
-# df_pspec.loc[:5,'Empirical'].dropna().to_csv('data_export/'+dir_name+'/pspecs.csv',
-#             header=True)
-# 
-# 
-# # Export kendall tau values
-# df_ktau.to_csv('data_export/'+dir_name+'/ktau.csv')
+
+
+# Export EWS DataFrame
+df_ews.to_csv('data_export/'+dir_name+'/ews.csv')
+
+# Export power spectra
+df_pspec.to_csv('data_export/'+dir_name+'/pspec.csv')
+
 
 
     
