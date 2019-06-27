@@ -45,7 +45,7 @@ dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
 tmax = 400
 tburn = 100 # burn-in period
-numSims = 1
+numSims = 5
 seed = 1 # random number generation seed
 
 
@@ -54,7 +54,7 @@ dt2 = 1 # spacing between time-series for EWS computation
 rw = 0.4 # rolling window
 span = 0.5 # Lowess span
 lags = [1,2,3] # autocorrelation lag times
-ews = ['var','ac','sd','cv','skew','kurt','smax','aic','cf'] # EWS to compute
+ews = ['var','ac','sd','cv','skew','kurt','smax','smax/var','smax/mean'] # EWS to compute
 ham_length = 80 # number of data points in Hamming window
 ham_offset = 0.5 # proportion of Hamming window to offset by upon each iteration
 pspec_roll_offset = 10 # offset for rolling window when doing spectrum metrics
@@ -68,14 +68,14 @@ pspec_roll_offset = 10 # offset for rolling window when doing spectrum metrics
 
 # Model parameters
     
-gamma = 1/200	# Strength of density dependent effects
+gamma = 0.01   	# Strength of density dependent effects
 amp_dem = 0.1    # Demographic noise amplitude
 amp_env = 0.1	# Environmental noise amplitude
 
 
 # Bifurcation parameter
 rl = -0.2
-rh = 1
+rh = 1.2
 rcrit = 0
 
 # Function dynamic - outputs the subsequent state
@@ -253,48 +253,51 @@ df_ktau = pd.concat(appended_ktau).reset_index().set_index(['Realisation number'
 plot_num = 1
 var = 'x'
 ## Plot of trajectory, smoothing and EWS of var (x or y)
-fig1, axes = plt.subplots(nrows=3, ncols=1, sharex=True, figsize=(6,6))
+fig1, axes = plt.subplots(nrows=6, ncols=1, sharex=True, figsize=(6,8))
 df_ews.loc[plot_num,var][['State variable','Smoothing']].plot(ax=axes[0],
           title='Early warning signals for a single realisation')
-df_ews.loc[plot_num,var]['Coefficient of variation'].plot(ax=axes[1],legend=True)
-df_ews.loc[plot_num,var][['Lag-1 AC']].plot(ax=axes[1], secondary_y=True,legend=True)
-df_ews.loc[plot_num,var]['Skewness'].plot(ax=axes[2],legend=True)
+df_ews.loc[plot_num,var][['Variance']].plot(ax=axes[1], legend=True)
+df_ews.loc[plot_num,var]['Coefficient of variation'].plot(ax=axes[2],legend=True)
+df_ews.loc[plot_num,var][['Lag-1 AC']].plot(ax=axes[2], secondary_y=True,legend=True)
+df_ews.loc[plot_num,var]['Smax/Var'].dropna().plot(ax=axes[3],legend=True)
+df_ews.loc[plot_num,var]['Smax/Mean'].dropna().plot(ax=axes[4],legend=True)
+df_ews.loc[plot_num,var]['Skewness'].plot(ax=axes[5],legend=True)
 
-plt.savefig('figures/ews_trans_r_ext.png')
+#plt.savefig('figures/ews_trans_r_ext.png')
 
 
 
 
-## Define function to make grid plot for evolution of the power spectrum in time
-def plot_pspec_grid(tVals, plot_num, var):
-    
-    g = sns.FacetGrid(df_pspec.loc[plot_num,var].loc[t_display].reset_index(), 
-                  col='Time',
-                  col_wrap=3,
-                  sharey=False,
-                  aspect=1.5,
-                  height=1.8
-                  )
+### Define function to make grid plot for evolution of the power spectrum in time
+#def plot_pspec_grid(tVals, plot_num, var):
+#    
+#    g = sns.FacetGrid(df_pspec.loc[plot_num,var].loc[t_display].reset_index(), 
+#                  col='Time',
+#                  col_wrap=3,
+#                  sharey=False,
+#                  aspect=1.5,
+#                  height=1.8
+#                  )
+#
+#    g.map(plt.plot, 'Frequency', 'Empirical', color='k', linewidth=2)
+#    g.map(plt.plot, 'Frequency', 'Fit fold', color='b', linestyle='dashed', linewidth=1)
+#    g.map(plt.plot, 'Frequency', 'Fit hopf', color='r', linestyle='dashed', linewidth=1)
+#    g.map(plt.plot, 'Frequency', 'Fit null', color='g', linestyle='dashed', linewidth=1)
+#    # Axes properties
+#    axes = g.axes
+#    # Set y labels
+#    for ax in axes[::3]:
+#        ax.set_ylabel('Power')
+#        # Set y limit as max power over all time
+#        for ax in axes:
+#            ax.set_ylim(top=1.05*max(df_pspec.loc[plot_num,var]['Empirical']), bottom=0)
+#       
+#    return g
 
-    g.map(plt.plot, 'Frequency', 'Empirical', color='k', linewidth=2)
-    g.map(plt.plot, 'Frequency', 'Fit fold', color='b', linestyle='dashed', linewidth=1)
-    g.map(plt.plot, 'Frequency', 'Fit hopf', color='r', linestyle='dashed', linewidth=1)
-    g.map(plt.plot, 'Frequency', 'Fit null', color='g', linestyle='dashed', linewidth=1)
-    # Axes properties
-    axes = g.axes
-    # Set y labels
-    for ax in axes[::3]:
-        ax.set_ylabel('Power')
-        # Set y limit as max power over all time
-        for ax in axes:
-            ax.set_ylim(top=1.05*max(df_pspec.loc[plot_num,var]['Empirical']), bottom=0)
-       
-    return g
-
-#  Choose time values at which to display power spectrum
-t_display = df_pspec.index.levels[2][::3].values
-
-plot_pspec = plot_pspec_grid(t_display, plot_num, 'x')
+##  Choose time values at which to display power spectrum
+#t_display = df_pspec.index.levels[2][::3].values
+#
+#plot_pspec = plot_pspec_grid(t_display, plot_num, 'x')
 
 
 
@@ -307,16 +310,12 @@ plot_pspec = plot_pspec_grid(t_display, plot_num, 'x')
 
 
 
-
+#
 #------------------------------------
 ## Export data 
 #-----------------------------------
 
-## Export power spectrum evolution (grid plot)
-#plot_pspec.savefig('figures/pspec_evol.png', dpi=200)
-
-
-# 
+#
 # ## Export the first 5 realisations to see individual behaviour
 # # EWS DataFrame (includes trajectories)
 # df_ews.loc[:5].to_csv('data_export/'+dir_name+'/ews_singles.csv')
