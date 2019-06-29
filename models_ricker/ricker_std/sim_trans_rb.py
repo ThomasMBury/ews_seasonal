@@ -29,7 +29,7 @@ from cross_corr import cross_corr
 #–----------------------
 
 # Name of directory within data_export
-dir_name = 'ricker_trans_rext'
+dir_name = 'tmax400sims100'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -45,7 +45,7 @@ dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
 tmax = 400
 tburn = 100 # burn-in period
-numSims = 5
+numSims = 100
 seed = 1 # random number generation seed
 
 
@@ -320,8 +320,8 @@ df_ews.loc[plot_num,var]['Skewness'].plot(ax=axes[5],legend=True)
 # Export EWS DataFrame
 df_ews.to_csv('data_export/'+dir_name+'/ews.csv')
 
-# Export power spectra
-df_pspec.to_csv('data_export/'+dir_name+'/pspec.csv')
+# Export power spectra of first 5 realisations
+df_pspec.loc[1:5].to_csv('data_export/'+dir_name+'/pspec.csv')
 
 
 
