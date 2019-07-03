@@ -28,7 +28,7 @@ from cross_corr import cross_corr
 #–----------------------
 
 # Name of directory within data_export 
-dir_name = 'ricker_trans_rb'
+dir_name = 'ricker_trans_rb2'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -44,8 +44,8 @@ dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
 tmax = 500
 tburn = 200 # burn-in period
-numSims = 4
-seed = 610 # random number generation seed
+numSims = 2
+seed = 0 # random number generation seed
 
 
 # EWS parameters
@@ -53,7 +53,7 @@ dt2 = 1 # spacing between time-series for EWS computation
 rw = 0.4 # rolling window
 span = 0.5 # Lowess span
 lags = [1,2,3] # autocorrelation lag times
-ews = ['var','ac','sd','cv','skew','kurt','smax','smax/mean'] # EWS to compute
+ews = ['var','ac','sd','cv','skew','kurt','smax','smax/mean','smax/var'] # EWS to compute
 ham_length = 80 # number of data points in Hamming window
 ham_offset = 0.5 # proportion of Hamming window to offset by upon each iteration
 pspec_roll_offset = 20 # offset for rolling window when doing spectrum metrics
@@ -162,11 +162,12 @@ for j in range(numSims):
         # make sure that state variable remains >= 0 
         s[i+1] = [np.max([k,0]) for k in s[i+1]]
             
-    # Store series data in a temporary DataFrame
+    # Store series data in a temporary DataFrame- include column for total population count
     data = {'Realisation number': (j+1)*np.ones(len(t)),
                 'Time': t,
                 'Non-breeding': s[:,0],
-                'Breeding': s[:,1]}
+                'Breeding': s[:,1],
+                'Total': s[:,0] + s[:,1]}
     df_temp = pd.DataFrame(data)
     # Append to list
     list_traj_append.append(df_temp)
