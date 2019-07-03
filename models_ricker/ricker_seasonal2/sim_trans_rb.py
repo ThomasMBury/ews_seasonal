@@ -14,7 +14,7 @@ Transcritical bifurcation to extinction as rb is decreased.
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
+import os 
 
 # import ewstools
 from ewstools import ewstools
@@ -27,7 +27,7 @@ from cross_corr import cross_corr
 # Directory for data output
 #–----------------------
 
-# Name of directory within data_export
+# Name of directory within data_export 
 dir_name = 'ricker_trans_rb'
 
 if not os.path.exists('data_export/'+dir_name):
