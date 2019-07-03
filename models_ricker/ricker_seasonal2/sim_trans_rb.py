@@ -28,7 +28,7 @@ from cross_corr import cross_corr
 #–----------------------
 
 # Name of directory within data_export 
-dir_name = 'ricker_trans_rb2'
+dir_name = 'ricker_trans_rb_rblow'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -54,9 +54,9 @@ rw = 0.4 # rolling window
 span = 0.5 # Lowess span
 lags = [1,2,3] # autocorrelation lag times
 ews = ['var','ac','sd','cv','skew','kurt','smax','smax/mean','smax/var'] # EWS to compute
-ham_length = 80 # number of data points in Hamming window
+ham_length = 40 # number of data points in Hamming window
 ham_offset = 0.5 # proportion of Hamming window to offset by upon each iteration
-pspec_roll_offset = 20 # offset for rolling window when doing spectrum metrics
+pspec_roll_offset = 10 # offset for rolling window when doing spectrum metrics
 
 
 #----------------------------------
@@ -81,8 +81,8 @@ amp_env_nb = 0.1
 
 
 # Bifurcation parameter
-rb_l = -0.5
-rb_h = 2.24
+rb_l = -0.1
+rb_h = 1.2
 rb_crit = 0
 
 
@@ -193,6 +193,7 @@ df_traj_filt = df_traj.loc[::int(dt2/dt)]
 
 # set up a list to store output dataframes from ews_compute- we will concatenate them at the end
 appended_ews = []
+appended_pspec = []
 appended_ktau = []
 
 # loop through realisation number
@@ -215,6 +216,8 @@ for i in range(numSims):
         
         # The DataFrame of EWS
         df_ews_temp = ews_dic['EWS metrics']
+        # The DataFrame of power spectra
+        df_pspec_temp = ews_dic['Power spectrum']
         # The DataFrame of kendall tau values
         df_ktau_temp = ews_dic['Kendall tau']
         
@@ -231,6 +234,10 @@ for i in range(numSims):
         df_ews_temp['Variable'] = var
         df_ews_temp['Cross correlation'] = series_cross_corr
 
+        
+        df_pspec_temp['Realisation number'] = i+1
+        df_pspec_temp['Variable'] = var
+
 
         df_ktau_temp['Realisation number'] = i+1
         df_ktau_temp['Variable'] = var
@@ -239,6 +246,7 @@ for i in range(numSims):
         
         # Add DataFrames to list
         appended_ews.append(df_ews_temp)
+        appended_pspec.append(df_pspec_temp)
         appended_ktau.append(df_ktau_temp)
 
 
@@ -250,6 +258,10 @@ for i in range(numSims):
 
 # Concatenate EWS DataFrames. Index [Realisation number, Variable, Time]
 df_ews = pd.concat(appended_ews).reset_index().set_index(['Realisation number','Variable','Time'])
+
+# Concatenate power spectrum DataFrames. Index [Realisation number, Variable, Time, Frequency]
+df_pspec = pd.concat(appended_pspec).reset_index().set_index(['Realisation number','Variable','Time','Frequency'])
+
 # Concatenate kendall tau DataFrames. Index [Realisation number, Variable]
 df_ktau = pd.concat(appended_ktau).reset_index().set_index(['Realisation number','Variable'])
 
@@ -319,9 +331,8 @@ axes[0].set_ylabel('Population')
 axes[0].legend(title=None)
 axes[1].set_ylabel('CoV')
 axes[2].set_ylabel('Lag-1 AC')
-axes[3].set_ylabel('Skewness')
-axes[4].set_ylabel('Smax/Var')
-
+axes[3].set_ylabel('Smax/Var')
+axes[4].set_ylabel('Skewness')
 
 
 ## Box plot to visualise kendall tau values
@@ -337,9 +348,11 @@ axes[4].set_ylabel('Smax/Var')
 
 
 
-# Export EWS dataframe
-
+# Export EWS DataFrame
 df_ews.to_csv('data_export/'+dir_name+'/ews.csv')
+
+# Export power spectra of first 5 realisations
+df_pspec.loc[1:5].to_csv('data_export/'+dir_name+'/pspec.csv')
 
 
 
