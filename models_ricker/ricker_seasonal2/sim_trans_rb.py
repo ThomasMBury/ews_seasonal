@@ -42,10 +42,10 @@ if not os.path.exists('data_export/'+dir_name):
 # Simulation parameters
 dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
-tmax = 500
+tmax = 400
 tburn = 200 # burn-in period
-numSims = 2
-seed = 0 # random number generation seed
+numSims = 100
+seed = 1 # random number generation seed
 
 
 # EWS parameters
@@ -199,7 +199,7 @@ appended_ktau = []
 print('\nBegin EWS computation\n')
 for i in range(numSims):
     # loop through variable
-    for var in ['Non-breeding','Breeding']:
+    for var in ['Non-breeding','Breeding','Total']:
         
         ews_dic = ewstools.ews_compute(df_traj_filt.loc[i+1][var], 
                           roll_window = rw,
@@ -274,15 +274,54 @@ df_ews.loc[plot_num]['State variable'].unstack(level=0).plot(ax=axes[0],
           title='Early warning signals for a single realisation')
 df_ews.loc[plot_num]['Coefficient of variation'].unstack(level=0).plot(ax=axes[1],legend=False)
 df_ews.loc[plot_num]['Lag-1 AC'].unstack(level=0).plot(ax=axes[2], legend=False)
-df_ews.loc[plot_num]['Skewness'].dropna().unstack(level=0).plot(ax=axes[3], legend=False)
-df_ews.loc[plot_num,'Breeding']['Cross correlation'].plot(ax=axes[4], legend=False)
+df_ews.loc[plot_num,'Smax/Var'].dropna().unstack(level=0).plot(ax=axes[3], legend=False)
+df_ews.loc[plot_num]['Skewness'].dropna().unstack(level=0).plot(ax=axes[4], legend=False, xlim=(0,400))
 
 axes[0].set_ylabel('Population')
 axes[0].legend(title=None)
 axes[1].set_ylabel('CoV')
 axes[2].set_ylabel('Lag-1 AC')
 axes[3].set_ylabel('Skewness')
-axes[4].set_ylabel('Cross correlation')
+axes[4].set_ylabel('Smax/Var')
+
+
+
+# Realisation number to plot
+plot_num = 2
+## Plot of trajectory, smoothing and EWS of var (x or y)
+fig2, axes = plt.subplots(nrows=5, ncols=1, sharex=True, figsize=(6,8))
+df_ews.loc[plot_num]['State variable'].unstack(level=0).plot(ax=axes[0],
+          title='Early warning signals for a single realisation')
+df_ews.loc[plot_num]['Coefficient of variation'].unstack(level=0).plot(ax=axes[1],legend=False)
+df_ews.loc[plot_num]['Lag-1 AC'].unstack(level=0).plot(ax=axes[2], legend=False)
+df_ews.loc[plot_num,'Smax/Var'].dropna().unstack(level=0).plot(ax=axes[3], legend=False)
+df_ews.loc[plot_num]['Skewness'].dropna().unstack(level=0).plot(ax=axes[4], legend=False, xlim=(0,400))
+
+axes[0].set_ylabel('Population')
+axes[0].legend(title=None)
+axes[1].set_ylabel('CoV')
+axes[2].set_ylabel('Lag-1 AC')
+axes[3].set_ylabel('Skewness')
+axes[4].set_ylabel('Smax/Var')
+
+# Realisation number to plot
+plot_num = 3
+## Plot of trajectory, smoothing and EWS of var (x or y)
+fig3, axes = plt.subplots(nrows=5, ncols=1, sharex=True, figsize=(6,8))
+df_ews.loc[plot_num]['State variable'].unstack(level=0).plot(ax=axes[0],
+          title='Early warning signals for a single realisation')
+df_ews.loc[plot_num]['Coefficient of variation'].unstack(level=0).plot(ax=axes[1],legend=False)
+df_ews.loc[plot_num]['Lag-1 AC'].unstack(level=0).plot(ax=axes[2], legend=False)
+df_ews.loc[plot_num,'Smax/Var'].dropna().unstack(level=0).plot(ax=axes[3], legend=False)
+df_ews.loc[plot_num]['Skewness'].dropna().unstack(level=0).plot(ax=axes[4], legend=False, xlim=(0,400))
+
+axes[0].set_ylabel('Population')
+axes[0].legend(title=None)
+axes[1].set_ylabel('CoV')
+axes[2].set_ylabel('Lag-1 AC')
+axes[3].set_ylabel('Skewness')
+axes[4].set_ylabel('Smax/Var')
+
 
 
 ## Box plot to visualise kendall tau values
@@ -298,7 +337,7 @@ axes[4].set_ylabel('Cross correlation')
 
 
 
-## Export EWS dataframe
+# Export EWS dataframe
 
 df_ews.to_csv('data_export/'+dir_name+'/ews.csv')
 
