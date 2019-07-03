@@ -28,7 +28,7 @@ from cross_corr import cross_corr
 #–----------------------
 
 # Name of directory within data_export 
-dir_name = 'ricker_trans_rb_rblow'
+dir_name = 'ricker_trans_rb_temp'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -44,7 +44,7 @@ dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
 tmax = 400
 tburn = 200 # burn-in period
-numSims = 100
+numSims = 3
 seed = 1 # random number generation seed
 
 
@@ -81,7 +81,7 @@ amp_env_nb = 0.1
 
 
 # Bifurcation parameter
-rb_l = -0.1
+rb_l = -0.2
 rb_h = 1.2
 rb_crit = 0
 
@@ -266,11 +266,9 @@ df_pspec = pd.concat(appended_pspec).reset_index().set_index(['Realisation numbe
 df_ktau = pd.concat(appended_ktau).reset_index().set_index(['Realisation number','Variable'])
 
 
-## Compute ensemble statistics of EWS over all realisations (mean, pm1 s.d.)
-#ews_names = ['Variance', 'Lag-1 AC', 'Lag-2 AC', 'Lag-4 AC', 'AIC fold', 'AIC hopf', 'AIC null', 'Coherence factor']
-
-#df_ews_means = df_ews[ews_names].mean(level='Time')
-#df_ews_deviations = df_ews[ews_names].std(level='Time')
+# Compute ensemble statistics of EWS over all realisations (mean, pm1 s.d.)
+df_ews_means = df_ews.mean(level=('Variable','Time'))
+df_ews_deviations = df_ews.std(level=('Variable','Time'))
 
 
 
@@ -346,13 +344,17 @@ axes[4].set_ylabel('Skewness')
 ## Export data 
 #-----------------------------------
 
-
-
-# Export EWS DataFrame
-df_ews.to_csv('data_export/'+dir_name+'/ews.csv')
+# Export 5 sinlge realisations EWS DataFrame
+df_ews.loc[1:5].to_csv('data_export/'+dir_name+'/ews_singles.csv')
 
 # Export power spectra of first 5 realisations
 df_pspec.loc[1:5].to_csv('data_export/'+dir_name+'/pspec.csv')
 
+# Export aggregates
+df_ews_means.to_csv('data_export/'+dir_name+'/ews_means.csv')
+df_ews_deviations.to_csv('data_export/'+dir_name+'/ews_deviations.csv')
+
+# Export Kendall tau values
+df_ktau.to_csv('data_export/'+dir_name+'/ktau.csv')
 
 
