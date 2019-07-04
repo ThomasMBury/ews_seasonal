@@ -44,7 +44,7 @@ dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
 tmax = 200
 tburn = 200 # burn-in period
-numSims = 3
+numSims = 100
 seed = 1 # random number generation seed
 
 
