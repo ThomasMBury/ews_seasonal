@@ -28,7 +28,7 @@ from cross_corr import cross_corr
 #–----------------------
 
 # Name of directory within data_export
-dir_name = 'ricker_trans_rnb'
+dir_name = 'trans_rnb_tmax200'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -42,19 +42,19 @@ if not os.path.exists('data_export/'+dir_name):
 # Simulation parameters
 dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
-tmax = 200
+tmax = 400
 tburn = 200 # burn-in period
-numSims = 1
-seed = 6 # random number generation seed
+numSims = 2
+seed = 0 # random number generation seed
 
 
 # EWS parameters
 dt2 = 1 # spacing between time-series for EWS computation
-rw = 0.2 # rolling window
+rw = 0.4 # rolling window
 span = 0.5 # Lowess span
 lags = [1,2,3] # autocorrelation lag times
-ews = ['var','ac','sd','cv','skew','kurt','smax','aic'] # EWS to compute
-ham_length = 80 # number of data points in Hamming window
+ews = ['var','ac','sd','cv','skew','kurt','smax','smax/mean','smax/var'] # EWS to compute
+ham_length = 40 # number of data points in Hamming window
 ham_offset = 0.5 # proportion of Hamming window to offset by upon each iteration
 pspec_roll_offset = 10 # offset for rolling window when doing spectrum metrics
 
@@ -67,7 +67,7 @@ pspec_roll_offset = 10 # offset for rolling window when doing spectrum metrics
 
 # Model parameters
     
-rb = 2.24    # Growth rate for breeding period
+rb = 2.24   # Growth rate for breeding period (2.24 in paper)
 rnbEmp = -0.0568 # empirically measured rnb
 alpha_b = 0.01 # density dependent effects in breeding period
 alpha_nb = 0.000672 # density dependent effects in non-breeding period
@@ -82,7 +82,7 @@ amp_env_nb = 0.1
 
 
 # Bifurcation parameter
-rnb_l = -2.5
+rnb_l = -2
 rnb_h = rnbEmp
 rnb_crit = -2.24
 
@@ -122,7 +122,7 @@ s = np.zeros([len(t),2])
 # Set bifurcation parameter b, that increases decreases linearly from bh to bl
 b = pd.Series(np.linspace(rnb_h, rnb_l ,len(t)),index=t)
 # Time at which bifurcation occurs
-tcrit = b[b < rnb_crit].index[1]
+#tcrit = b[b < rnb_crit].index[1]
 
 
 # Initial conditions
@@ -165,7 +165,8 @@ for j in range(numSims):
     data = {'Realisation number': (j+1)*np.ones(len(t)),
                 'Time': t,
                 'Non-breeding': s[:,0],
-                'Breeding': s[:,1]}
+                'Breeding': s[:,1],
+                'Total': s[:,0]+s[:,1]}
     df_temp = pd.DataFrame(data)
     # Append to list
     list_traj_append.append(df_temp)
@@ -186,16 +187,20 @@ df_traj.set_index(['Realisation number','Time'], inplace=True)
 # ---------------------
 
 
+# Filter time-series to have time-spacing dt2
+df_traj_filt = df_traj.loc[::int(dt2/dt)]
 
 # set up a list to store output dataframes from ews_compute- we will concatenate them at the end
 appended_ews = []
+appended_pspec = []
 appended_ktau = []
+
 
 # loop through realisation number
 print('\nBegin EWS computation\n')
 for i in range(numSims):
     # loop through variable
-    for var in ['Non-breeding','Breeding']:
+    for var in ['Non-breeding','Breeding','Total']:
         
         # Time-series
         series=df_traj.loc[i+1][var]
@@ -217,14 +222,16 @@ for i in range(numSims):
         
         # The DataFrame of EWS
         df_ews_temp = ews_dic['EWS metrics']
+        # The DataFrame of power spectra
+        df_pspec_temp = ews_dic['Power spectrum']
         # The DataFrame of kendall tau values
         df_ktau_temp = ews_dic['Kendall tau']
         
         # Compute cross-correlation
-        df_cross_corr = cross_corr(df_traj.loc[i+1][['Non-breeding','Breeding']],
+        df_cross_corr = cross_corr(df_traj_filt.loc[i+1][['Non-breeding','Breeding']],
                                    roll_window = rw,
                                    span = span,
-                                   upto=tExt-5)
+                                   upto=tExt)
         series_cross_corr = df_cross_corr['EWS metrics']['Cross correlation']
         
         
@@ -232,6 +239,10 @@ for i in range(numSims):
         df_ews_temp['Realisation number'] = i+1
         df_ews_temp['Variable'] = var
         df_ews_temp['Cross correlation'] = series_cross_corr
+
+        
+        df_pspec_temp['Realisation number'] = i+1
+        df_pspec_temp['Variable'] = var
 
 
         df_ktau_temp['Realisation number'] = i+1
@@ -241,6 +252,7 @@ for i in range(numSims):
         
         # Add DataFrames to list
         appended_ews.append(df_ews_temp)
+        appended_pspec.append(df_pspec_temp)
         appended_ktau.append(df_ktau_temp)
 
 
@@ -252,15 +264,17 @@ for i in range(numSims):
 
 # Concatenate EWS DataFrames. Index [Realisation number, Variable, Time]
 df_ews = pd.concat(appended_ews).reset_index().set_index(['Realisation number','Variable','Time'])
+
+# Concatenate power spectrum DataFrames. Index [Realisation number, Variable, Time, Frequency]
+df_pspec = pd.concat(appended_pspec).reset_index().set_index(['Realisation number','Variable','Time','Frequency'])
+
 # Concatenate kendall tau DataFrames. Index [Realisation number, Variable]
 df_ktau = pd.concat(appended_ktau).reset_index().set_index(['Realisation number','Variable'])
 
 
-## Compute ensemble statistics of EWS over all realisations (mean, pm1 s.d.)
-#ews_names = ['Variance', 'Lag-1 AC', 'Lag-2 AC', 'Lag-4 AC', 'AIC fold', 'AIC hopf', 'AIC null', 'Coherence factor']
-
-#df_ews_means = df_ews[ews_names].mean(level='Time')
-#df_ews_deviations = df_ews[ews_names].std(level='Time')
+# Compute ensemble statistics of EWS over all realisations (mean, pm1 s.d.)
+df_ews_means = df_ews.mean(level=('Variable','Time'))
+df_ews_deviations = df_ews.std(level=('Variable','Time'))
 
 
 
@@ -271,33 +285,53 @@ df_ktau = pd.concat(appended_ktau).reset_index().set_index(['Realisation number'
 # Realisation number to plot
 plot_num = 1
 ## Plot of trajectory, smoothing and EWS of var (x or y)
-fig1, axes = plt.subplots(nrows=7, ncols=1, sharex=True, figsize=(6,8))
+fig1, axes = plt.subplots(nrows=6, ncols=1, sharex=True, figsize=(6,6))
 df_ews.loc[plot_num]['State variable'].unstack(level=0).plot(ax=axes[0],
           title='Early warning signals for a single realisation')
-df_ews.loc[plot_num]['Coefficient of variation'].unstack(level=0).plot(ax=axes[1],legend=False)
-df_ews.loc[plot_num]['Lag-1 AC'].unstack(level=0).plot(ax=axes[2], legend=False)
-df_ews.loc[plot_num]['Skewness'].dropna().unstack(level=0).plot(ax=axes[3], legend=False)
-df_ews.loc[plot_num]['Kurtosis'].dropna().unstack(level=0).plot(ax=axes[4], legend=False)
-df_ews.loc[plot_num,'Breeding']['Cross correlation'].plot(ax=axes[5], legend=False)
-df_ews.loc[plot_num]['AIC hopf'].dropna().unstack(level=0).plot(ax=axes[6], legend=False)
+df_ews.loc[plot_num]['Variance'].unstack(level=0).plot(ax=axes[1],legend=False)
+df_ews.loc[plot_num]['Coefficient of variation'].unstack(level=0).plot(ax=axes[2],legend=False)
+df_ews.loc[plot_num]['Smax/Var'].dropna().unstack(level=0).plot(ax=axes[3], legend=False)
+df_ews.loc[plot_num]['Lag-1 AC'].unstack(level=0).plot(ax=axes[4], legend=False)
+df_ews.loc[plot_num]['Skewness'].unstack(level=0).plot(ax=axes[5], legend=False)
+
 
 
 
 axes[0].set_ylabel('Population')
 axes[0].legend(title=None)
-axes[1].set_ylabel('CoV')
-axes[2].set_ylabel('Lag-1 AC')
-axes[3].set_ylabel('Skewness')
-axes[4].set_ylabel('Kurtosis')
-axes[5].set_ylabel('Cross correlation')
-axes[6].set_ylabel('AIC hopf')
+axes[1].set_ylabel('Variance')
+axes[2].set_ylabel('CoV')
+axes[3].set_ylabel('Smax/Var')
+axes[4].set_ylabel('Lag-1 AC')
+axes[5].set_ylabel('Skewness')
+axes[5].set_xlim(0,tmax)
 
-axes[6].set_xlim(0,tmax)
 
-## Box plot to visualise kendall tau values
-#df_ktau[['Coefficient of variation','Lag-1 AC','Skewness','Cross correlation']].boxplot()
-#
 
+
+# Realisation number to plot
+plot_num = 2
+## Plot of trajectory, smoothing and EWS of var (x or y)
+fig1, axes = plt.subplots(nrows=6, ncols=1, sharex=True, figsize=(6,6))
+df_ews.loc[plot_num]['State variable'].unstack(level=0).plot(ax=axes[0],
+          title='Early warning signals for a single realisation')
+df_ews.loc[plot_num]['Variance'].unstack(level=0).plot(ax=axes[1],legend=False)
+df_ews.loc[plot_num]['Coefficient of variation'].unstack(level=0).plot(ax=axes[2],legend=False)
+df_ews.loc[plot_num]['Smax/Var'].dropna().unstack(level=0).plot(ax=axes[3], legend=False)
+df_ews.loc[plot_num]['Lag-1 AC'].unstack(level=0).plot(ax=axes[4], legend=False)
+df_ews.loc[plot_num]['Skewness'].unstack(level=0).plot(ax=axes[5], legend=False)
+
+
+
+
+axes[0].set_ylabel('Population')
+axes[0].legend(title=None)
+axes[1].set_ylabel('Variance')
+axes[2].set_ylabel('CoV')
+axes[3].set_ylabel('Smax/Var')
+axes[4].set_ylabel('Lag-1 AC')
+axes[5].set_ylabel('Skewness')
+axes[5].set_xlim(0,tmax)
 
 
 
@@ -307,11 +341,18 @@ axes[6].set_xlim(0,tmax)
 ## Export data 
 #-----------------------------------
 
+# Export 5 sinlge realisations EWS DataFrame
+df_ews.loc[1:5].to_csv('data_export/'+dir_name+'/ews_singles.csv')
 
+# Export power spectra of first 5 realisations
+df_pspec.loc[1:5].to_csv('data_export/'+dir_name+'/pspec.csv')
 
-## Export EWS dataframe
+# Export aggregates
+df_ews_means.to_csv('data_export/'+dir_name+'/ews_means.csv')
+df_ews_deviations.to_csv('data_export/'+dir_name+'/ews_deviations.csv')
 
-df_ews.to_csv('data_export/'+dir_name+'/ews.csv')
+# Export Kendall tau values
+df_ktau.to_csv('data_export/'+dir_name+'/ktau.csv')
 
 
 
