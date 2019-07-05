@@ -28,7 +28,7 @@ from cross_corr import cross_corr
 #–----------------------
 
 # Name of directory within data_export
-dir_name = 'trans_rnb_tmax200'
+dir_name = 'trans_rnb_tmax400'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -44,7 +44,7 @@ dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
 tmax = 400
 tburn = 200 # burn-in period
-numSims = 2
+numSims = 100
 seed = 0 # random number generation seed
 
 
@@ -67,7 +67,7 @@ pspec_roll_offset = 10 # offset for rolling window when doing spectrum metrics
 
 # Model parameters
     
-rb = 2.24   # Growth rate for breeding period (2.24 in paper)
+rb = 1.2   # Growth rate for breeding period (2.24 in paper)
 rnbEmp = -0.0568 # empirically measured rnb
 alpha_b = 0.01 # density dependent effects in breeding period
 alpha_nb = 0.000672 # density dependent effects in non-breeding period
@@ -82,9 +82,9 @@ amp_env_nb = 0.1
 
 
 # Bifurcation parameter
-rnb_l = -2
+rnb_l = -1.5
 rnb_h = rnbEmp
-rnb_crit = -2.24
+rnb_crit = -1
 
 
 # Function dynamic - outputs the subsequent state
