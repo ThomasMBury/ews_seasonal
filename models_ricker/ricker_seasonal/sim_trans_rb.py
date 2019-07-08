@@ -28,7 +28,7 @@ from cross_corr import cross_corr
 #–----------------------
 
 # Name of directory within data_export 
-dir_name = 'trans_rb_tmax400'
+dir_name = 'trans_rb_temp'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -44,7 +44,7 @@ dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
 tmax = 400
 tburn = 200 # burn-in period
-numSims = 100
+numSims = 3
 seed = 1 # random number generation seed
 
 
@@ -344,7 +344,7 @@ axes[4].set_ylabel('Skewness')
 ## Export data 
 #-----------------------------------
 
-# Export 5 sinlge realisations EWS DataFrame
+# Export 5 single realisations EWS DataFrame
 df_ews.loc[1:5].to_csv('data_export/'+dir_name+'/ews_singles.csv')
 
 # Export power spectra of first 5 realisations

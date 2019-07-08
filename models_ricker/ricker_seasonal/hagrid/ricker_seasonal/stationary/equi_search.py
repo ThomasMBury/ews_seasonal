@@ -95,8 +95,8 @@ def find_equi(rb, rnb):
 # Find equilibrium values over a sweep of growth parameters
      
 # Growth parameters
-rbVals = np.arange(0,4.05,0.05)
-rnbVals = np.arange(-3,0.05,0.05)
+rbVals = np.arange(0,4.05,0.2)
+rnbVals = np.arange(-3,0.05,0.2)
 
 
 
