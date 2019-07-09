@@ -42,7 +42,7 @@ def apply_inplace(df, field, fun):
 #–----------------------
 
 # Name of directory within data_export
-dir_name = 'ews_stat_rvals'
+dir_name = 'ews_stat_temp'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -122,8 +122,8 @@ def de_fun(state, params, noise):
 
 
 # Growth parameters
-rbVals = np.arange(0, 3.05, 0.1).round(2)
-rnbVals = np.arange(-3, 0.05, 0.1).round(2)
+rbVals = np.arange(0, 3.05, 0.5).round(2)
+rnbVals = np.arange(-3, 0.05, 0.5).round(2)
 
 
 

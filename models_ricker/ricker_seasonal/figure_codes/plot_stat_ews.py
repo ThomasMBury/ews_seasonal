@@ -30,161 +30,146 @@ df_equi = pd.read_csv('../data_export/equi_data/equi_data1.csv')
 
 
 
-# Join data into single DataFrames for breeding and non-breeding population
-
-df_temp = df_equi.merge(df_ews.loc['Breeding'], on=('rb', 'rnb'))
 
 
-
-
-
-
-
-#-------------------
-# Plot equilibrium values
-#–-------------------
-
-# Remove non-numeric entries (text like "period-2 oscillations")
-df_equi['x_num'] = pd.to_numeric(df_equi['x'], errors='coerce')
-df_equi['y_num'] = pd.to_numeric(df_equi['y'], errors='coerce')
-
-
-df_plot_x = df_equi.pivot(index='rb', columns='rnb', values='x_num').iloc[::-1]
-df_plot_y = df_equi.pivot(index='rb', columns='rnb', values='y_num').iloc[::-1]
+# Figure params
+left = 0.125  # the left side of the subplots of the figure
+right = 0.9   # the right side of the subplots of the figure
+bottom = 0.1  # the bottom of the subplots of the figure
+top = 0.9     # the top of the subplots of the figure
+wspace = 0.1  # the amount of width reserved for space between subplots,
+              # expressed as a fraction of the average axis width
+hspace = 0.3  # the amount of height reserved for space between subplots,
+              # expressed as a fraction of the average axis height
+       
+        
+        
+       
+        
+#---------------------
+# Breeding population plot
+#--------
 
 
 
-
-# Plot for breeding population
-plt.figure(figsize=(3,3))
-ax = plt.axes()
-sns.heatmap(df_plot_x, cmap='RdYlGn', vmin=0, vmax=500, ax=ax, 
-            xticklabels=5,
-            yticklabels=5)
-ax.set_title('Non-breedinge population: size')
-plt.show()
-
-# Plot for non-breeding population
-plt.figure(figsize=(3,3))
-ax = plt.axes()
-sns.heatmap(df_plot_y, cmap='RdYlGn', vmin=0, ax=ax,
-            xticklabels=5,
-            yticklabels=5)
-ax.set_title('Breeding population: size')
-plt.show()
+# Create grid for plot
+fig, axes = plt.subplots(nrows=3, ncols=2, sharex=True, sharey=True, figsize=(8,8))
+fig.subplots_adjust(left=left, right=right, bottom=bottom, top=top, wspace=wspace, hspace=hspace)
+fig.suptitle('Breeding population')
 
 
+    
+# Equilibrium values
+df_plot = df_equi.pivot(index='rb', columns='rnb', values='y_num').iloc[::-1]
+sns.heatmap(df_plot, cmap='RdYlGn', vmin=0, vmax=200, ax=axes[0,0])
+axes[0,0].set_title('Average population size')
+axes[0,0].set_xlabel('')
 
 
-#----------------
-# Plot EWS
-#---------------
-
-## Variance
-
-# Breeding population variance
-df_plot = df_ews.loc['Breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Variance').iloc[::-1]
-plt.figure(figsize=(3,3))
-ax = plt.axes()
-sns.heatmap(df_plot, cmap='RdYlGn', vmin=0, vmax=200, ax=ax, 
-            xticklabels=1,
-            yticklabels=1)
-ax.set_title('Breeding population: Variance')
-plt.show()
-
-# Non-breeding population variance
-df_plot = df_ews.loc['Non-breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Variance').iloc[::-1]
-plt.figure(figsize=(3,3))
-ax = plt.axes()
-sns.heatmap(df_plot, cmap='RdYlGn', vmin=0, vmax=200, ax=ax, 
-            xticklabels=1,
-            yticklabels=1)
-ax.set_title('Non-breeding population: Variance')
-plt.show()
+# Variance
+df_plot = df_ews.loc['Breeding'].reset_index().pivot(index='rb', columns='rnb', values='Variance').iloc[::-1]
+sns.heatmap(df_plot, cmap='RdYlGn', vmin=0, vmax=200, ax=axes[0,1])
+axes[0,1].set_title('Variance')
+axes[0,1].set_xlabel('')
+axes[0,1].set_ylabel('')
 
 
+# Coefficient of variation
+df_plot = df_ews.loc['Breeding'].reset_index().pivot(index='rb', columns='rnb', values='Coefficient of variation').iloc[::-1]
+sns.heatmap(df_plot, cmap='RdYlGn', ax=axes[1,0], vmax=0.4)
+axes[1,0].set_title('C.V.')
+axes[1,0].set_xlabel('')
 
 
-## Coefficient of variation
+# Smax/Var
+df_plot = df_ews.loc['Breeding'].reset_index().pivot(index='rb', columns='rnb', values='Smax/Var').iloc[::-1]
+sns.heatmap(df_plot, cmap='RdYlGn', ax=axes[1,1], vmax=0.6)
+axes[1,1].set_title('Smax/Var')
+axes[1,1].set_xlabel('')
+axes[1,1].set_ylabel('')
 
 
-# Breeding population
-df_plot = df_ews.loc['Breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Coefficient of variation').iloc[::-1]
-plt.figure(figsize=(3,3))
-ax = plt.axes()
-sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
-            xticklabels=1,
-            yticklabels=1)
-ax.set_title('Breeding population: Coefficient of variation')
-plt.show()
+# Lag-1 AC
+df_plot = df_ews.loc['Breeding'].reset_index().pivot(index='rb', columns='rnb', values='Lag-1 AC').iloc[::-1]
+sns.heatmap(df_plot, cmap='RdYlGn', ax=axes[2,0])
+axes[2,0].set_title('Lag-1 AC')
 
-# Non-breeding population
-df_plot = df_ews.loc['Non-breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Coefficient of variation').iloc[::-1]
-plt.figure(figsize=(3,3))
-ax = plt.axes()
-sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
-            xticklabels=1,
-            yticklabels=1)
-ax.set_title('Non-breeding population: Coefficient of variation')
-plt.show()
+
+# Skewness
+df_plot = df_ews.loc['Breeding'].reset_index().pivot(index='rb', columns='rnb', values='Skewness').iloc[::-1]
+sns.heatmap(df_plot, cmap='RdYlGn', ax=axes[2,1], vmax=0.6)
+axes[2,1].set_title('Skewness')
+axes[2,1].set_ylabel('')
+
+# Make frames for plot
+for ax in axes.flatten(): 
+    for _, spine in ax.spines.items():
+        spine.set_visible(True)
+    
+
+
+       
+        
+#---------------------
+# Non-breeding population plot
+#--------
 
 
 
-
-## Smax/Var
-
-
-# Breeding population
-df_plot = df_ews.loc['Breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Smax/Var').iloc[::-1]
-plt.figure(figsize=(3,3))
-ax = plt.axes()
-sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, vmax=0.6,
-            xticklabels=1,
-            yticklabels=1)
-ax.set_title('Breeding population: Smax/Var')
-plt.show()
-
-# Non-breeding population
-df_plot = df_ews.loc['Non-breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Smax/Var').iloc[::-1]
-plt.figure(figsize=(3,3))
-ax = plt.axes()
-sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
-            xticklabels=1,
-            yticklabels=1)
-ax.set_title('Non-breeding population: Smax/Var')
-plt.show()
+# Create grid for plot
+fig, axes = plt.subplots(nrows=3, ncols=2, sharex=True, sharey=True, figsize=(8,8))
+fig.subplots_adjust(left=left, right=right, bottom=bottom, top=top, wspace=wspace, hspace=hspace)
+fig.suptitle('Non-breeding population')
 
 
-
-## Lag-1 AC
-
-
-
-
-# Breeding population
-df_plot = df_ews.loc['Breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Lag-1 AC').iloc[::-1]
-plt.figure(figsize=(3,3))
-ax = plt.axes()
-sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
-            xticklabels=1,
-            yticklabels=1)
-ax.set_title('Breeding population: Lag-1 AC')
-plt.show()
-
-# Non-breeding population
-df_plot = df_ews.loc['Non-breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Lag-1 AC').iloc[::-1]
-plt.figure(figsize=(3,3))
-ax = plt.axes()
-sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
-            xticklabels=1,
-            yticklabels=1)
-ax.set_title('Non-breeding population: Lag-1 AC')
-plt.show()
+    
+# Equilibrium values
+df_plot = df_equi.pivot(index='rb', columns='rnb', values='x_num').iloc[::-1]
+sns.heatmap(df_plot, cmap='RdYlGn', vmin=0, vmax=500, ax=axes[0,0])
+axes[0,0].set_title('Average population size')
+axes[0,0].set_xlabel('')
 
 
+# Variance
+df_plot = df_ews.loc['Non-breeding'].reset_index().pivot(index='rb', columns='rnb', values='Variance').iloc[::-1]
+sns.heatmap(df_plot, cmap='RdYlGn', vmin=0, vmax=200, ax=axes[0,1])
+axes[0,1].set_title('Variance')
+axes[0,1].set_xlabel('')
+axes[0,1].set_ylabel('')
 
 
+# Coefficient of variation
+df_plot = df_ews.loc['Non-breeding'].reset_index().pivot(index='rb', columns='rnb', values='Coefficient of variation').iloc[::-1]
+sns.heatmap(df_plot, cmap='RdYlGn', ax=axes[1,0], vmax=0.4)
+axes[1,0].set_title('C.V.')
+axes[1,0].set_xlabel('')
 
+
+# Smax/Var
+df_plot = df_ews.loc['Non-breeding'].reset_index().pivot(index='rb', columns='rnb', values='Smax/Var').iloc[::-1]
+sns.heatmap(df_plot, cmap='RdYlGn', ax=axes[1,1], vmax=0.6)
+axes[1,1].set_title('Smax/Var')
+axes[1,1].set_xlabel('')
+axes[1,1].set_ylabel('')
+
+
+# Lag-1 AC
+df_plot = df_ews.loc['Non-breeding'].reset_index().pivot(index='rb', columns='rnb', values='Lag-1 AC').iloc[::-1]
+sns.heatmap(df_plot, cmap='RdYlGn', ax=axes[2,0])
+axes[2,0].set_title('Lag-1 AC')
+
+
+# Skewness
+df_plot = df_ews.loc['Non-breeding'].reset_index().pivot(index='rb', columns='rnb', values='Skewness').iloc[::-1]
+sns.heatmap(df_plot, cmap='RdYlGn', ax=axes[2,1])
+axes[2,1].set_title('Skewness')
+axes[2,1].set_ylabel('')
+
+# Make frames for plot
+for ax in axes.flatten(): 
+    for _, spine in ax.spines.items():
+        spine.set_visible(True)
+    
 
 
 
