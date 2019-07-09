@@ -58,8 +58,8 @@ if not os.path.exists('data_export/'+dir_name):
 # Simulation parameters
 dt = 1
 t0 = 0
-tmax = 400 # make large (to get idealised statistics from stationary distribution)
-tburn = 400 # burn-in period
+tmax = 1000 # make large (to get idealised statistics from stationary distribution)
+tburn = 200 # burn-in period
 seed = 0 # random number generation seed
 
 
@@ -122,8 +122,8 @@ def de_fun(state, params, noise):
 
 
 # Growth parameters
-rbVals = np.arange(0, 3.2, 0.2)
-rnbVals = np.arange(-1, 0.2, 0.2)
+rbVals = np.arange(0, 3.2, 0.5)
+rnbVals = np.arange(-1, 0.2, 0.5)
 
 
 
@@ -230,9 +230,9 @@ for rb in rbVals:
         for var in ['Non-breeding', 'Breeding']:
             
             
-#            # If time-series is extinct, do not compute EWS
-#            if df_traj.loc[(rb,rnb)]['Non-breeding'].sum()==0:
-#                break
+            # If time-series goes extinct at any point, do not compute EWS
+            if any(df_traj.loc[(rb, rnb)]['Non-breeding'] == 0):
+                break
             ews_dic = ewstools.ews_compute(df_traj.loc[(rb,rnb)][var], 
                               roll_window = rw,
                               smooth = 'Lowess',
@@ -290,20 +290,20 @@ df_pspec = df_pspec_full[df_pspec_full.index==tmax-1].reset_index().set_index(['
 ## Variance
 
 # Breeding population variance
-df_plot = df_ews.loc['Breeding'].reset_index().pivot(index='rb', columns='rnb', values='Variance').iloc[::-1]
+df_plot = df_ews.loc['Breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Variance').iloc[::-1]
 plt.figure(figsize=(3,3))
 ax = plt.axes()
-sns.heatmap(df_plot, cmap='RdYlGn', vmin=0, vmax=500, ax=ax, 
+sns.heatmap(df_plot, cmap='RdYlGn', vmin=0, vmax=200, ax=ax, 
             xticklabels=1,
             yticklabels=1)
 ax.set_title('Breeding population: Variance')
 plt.show()
 
 # Non-breeding population variance
-df_plot = df_ews.loc['Non-breeding'].reset_index().pivot(index='rb', columns='rnb', values='Variance').iloc[::-1]
+df_plot = df_ews.loc['Non-breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Variance').iloc[::-1]
 plt.figure(figsize=(3,3))
 ax = plt.axes()
-sns.heatmap(df_plot, cmap='RdYlGn', vmin=0, vmax=500, ax=ax, 
+sns.heatmap(df_plot, cmap='RdYlGn', vmin=0, vmax=200, ax=ax, 
             xticklabels=1,
             yticklabels=1)
 ax.set_title('Non-breeding population: Variance')
@@ -316,7 +316,7 @@ plt.show()
 
 
 # Breeding population
-df_plot = df_ews.loc['Breeding'].reset_index().pivot(index='rb', columns='rnb', values='Coefficient of variation').iloc[::-1]
+df_plot = df_ews.loc['Breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Coefficient of variation').iloc[::-1]
 plt.figure(figsize=(3,3))
 ax = plt.axes()
 sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
@@ -326,7 +326,7 @@ ax.set_title('Breeding population: Coefficient of variation')
 plt.show()
 
 # Non-breeding population
-df_plot = df_ews.loc['Non-breeding'].reset_index().pivot(index='rb', columns='rnb', values='Coefficient of variation').iloc[::-1]
+df_plot = df_ews.loc['Non-breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Coefficient of variation').iloc[::-1]
 plt.figure(figsize=(3,3))
 ax = plt.axes()
 sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
@@ -342,17 +342,17 @@ plt.show()
 
 
 # Breeding population
-df_plot = df_ews.loc['Breeding'].reset_index().pivot(index='rb', columns='rnb', values='Smax/Var').iloc[::-1]
+df_plot = df_ews.loc['Breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Smax/Var').iloc[::-1]
 plt.figure(figsize=(3,3))
 ax = plt.axes()
-sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
+sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, vmax=0.6,
             xticklabels=1,
             yticklabels=1)
 ax.set_title('Breeding population: Smax/Var')
 plt.show()
 
 # Non-breeding population
-df_plot = df_ews.loc['Non-breeding'].reset_index().pivot(index='rb', columns='rnb', values='Smax/Var').iloc[::-1]
+df_plot = df_ews.loc['Non-breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Smax/Var').iloc[::-1]
 plt.figure(figsize=(3,3))
 ax = plt.axes()
 sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
@@ -367,7 +367,7 @@ plt.show()
 
 
 # Breeding population
-df_plot = df_ews.loc['Breeding'].reset_index().pivot(index='rb', columns='rnb', values='Lag-1 AC').iloc[::-1]
+df_plot = df_ews.loc['Breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Lag-1 AC').iloc[::-1]
 plt.figure(figsize=(3,3))
 ax = plt.axes()
 sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
@@ -377,7 +377,7 @@ ax.set_title('Breeding population: Lag-1 AC')
 plt.show()
 
 # Non-breeding population
-df_plot = df_ews.loc['Non-breeding'].reset_index().pivot(index='rb', columns='rnb', values='Lag-1 AC').iloc[::-1]
+df_plot = df_ews.loc['Non-breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Lag-1 AC').iloc[::-1]
 plt.figure(figsize=(3,3))
 ax = plt.axes()
 sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
@@ -390,19 +390,6 @@ plt.show()
 
 
 
-
-
-#
-#
-#
-## Plot for non-breeding population
-#plt.figure(figsize=(3,3))
-#ax = plt.axes()
-#sns.heatmap(df_plot_y, cmap='RdYlGn', vmin=0, ax=ax,
-#            xticklabels=8,
-#            yticklabels=8)
-#ax.set_title('Breeding population: size')
-#plt.show()
 
 
 
