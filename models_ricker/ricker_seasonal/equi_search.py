@@ -95,8 +95,8 @@ def find_equi(rb, rnb):
 # Find equilibrium values over a sweep of growth parameters
      
 # Growth parameters
-rbVals = np.arange(0,4.05,0.2)
-rnbVals = np.arange(-3,0.05,0.2)
+rbVals = np.arange(0,3.05,0.1).round(2)
+rnbVals = np.arange(-3,0.05,0.1).round(2)
 
 
 
@@ -147,10 +147,8 @@ plt.show()
 
 
 
-#
-#
-## Export as csv
-#df_equi.to_csv('data_export/equi_data/equi_data1.csv')
+# Export as csv
+df_equi.to_csv('data_export/equi_data/equi_data1.csv')
 
 
 

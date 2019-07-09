@@ -122,8 +122,8 @@ def de_fun(state, params, noise):
 
 
 # Growth parameters
-rbVals = np.arange(0, 3.2, 0.5)
-rnbVals = np.arange(-1, 0.2, 0.5)
+rbVals = np.arange(0, 3.05, 0.1).round(2)
+rnbVals = np.arange(-3, 0.05, 0.1).round(2)
 
 
 
@@ -280,148 +280,16 @@ df_pspec = df_pspec_full[df_pspec_full.index==tmax-1].reset_index().set_index(['
 
 
 
-#-------------------------
-# Plot stationary EWS on plane of (rb, rnb)
-#–-------------------------
-
-
-
-
-## Variance
-
-# Breeding population variance
-df_plot = df_ews.loc['Breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Variance').iloc[::-1]
-plt.figure(figsize=(3,3))
-ax = plt.axes()
-sns.heatmap(df_plot, cmap='RdYlGn', vmin=0, vmax=200, ax=ax, 
-            xticklabels=1,
-            yticklabels=1)
-ax.set_title('Breeding population: Variance')
-plt.show()
-
-# Non-breeding population variance
-df_plot = df_ews.loc['Non-breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Variance').iloc[::-1]
-plt.figure(figsize=(3,3))
-ax = plt.axes()
-sns.heatmap(df_plot, cmap='RdYlGn', vmin=0, vmax=200, ax=ax, 
-            xticklabels=1,
-            yticklabels=1)
-ax.set_title('Non-breeding population: Variance')
-plt.show()
-
-
-
-
-## Coefficient of variation
-
-
-# Breeding population
-df_plot = df_ews.loc['Breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Coefficient of variation').iloc[::-1]
-plt.figure(figsize=(3,3))
-ax = plt.axes()
-sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
-            xticklabels=1,
-            yticklabels=1)
-ax.set_title('Breeding population: Coefficient of variation')
-plt.show()
-
-# Non-breeding population
-df_plot = df_ews.loc['Non-breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Coefficient of variation').iloc[::-1]
-plt.figure(figsize=(3,3))
-ax = plt.axes()
-sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
-            xticklabels=1,
-            yticklabels=1)
-ax.set_title('Non-breeding population: Coefficient of variation')
-plt.show()
-
-
-
-
-## Smax/Var
-
-
-# Breeding population
-df_plot = df_ews.loc['Breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Smax/Var').iloc[::-1]
-plt.figure(figsize=(3,3))
-ax = plt.axes()
-sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, vmax=0.6,
-            xticklabels=1,
-            yticklabels=1)
-ax.set_title('Breeding population: Smax/Var')
-plt.show()
-
-# Non-breeding population
-df_plot = df_ews.loc['Non-breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Smax/Var').iloc[::-1]
-plt.figure(figsize=(3,3))
-ax = plt.axes()
-sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
-            xticklabels=1,
-            yticklabels=1)
-ax.set_title('Non-breeding population: Smax/Var')
-plt.show()
-
-
-
-## Lag-1 AC
-
-
-# Breeding population
-df_plot = df_ews.loc['Breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Lag-1 AC').iloc[::-1]
-plt.figure(figsize=(3,3))
-ax = plt.axes()
-sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
-            xticklabels=1,
-            yticklabels=1)
-ax.set_title('Breeding population: Lag-1 AC')
-plt.show()
-
-# Non-breeding population
-df_plot = df_ews.loc['Non-breeding'].reset_index().round({'rb':2, 'rnb':2}).pivot(index='rb', columns='rnb', values='Lag-1 AC').iloc[::-1]
-plt.figure(figsize=(3,3))
-ax = plt.axes()
-sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
-            xticklabels=1,
-            yticklabels=1)
-ax.set_title('Non-breeding population: Lag-1 AC')
-plt.show()
-
-
-
-
-
-
-
 
 
 
 #------------------------------------
-## Export data / figures
+## Export data for plotting elsewhere
 #-----------------------------------
 
 
-### Export EWS data
-#
-## Non-breeding EWS
-#df_ews_nb = df_ews.loc['Non-breeding']
-#df_ews_nb.to_csv('data_export/'+dir_name+'/ews_nb.csv')
-#
-## Breeding EWS
-#df_ews_b = df_ews.loc['Breeding']
-#df_ews_b.to_csv('data_export/'+dir_name+'/ews_b.csv')
+## Export EWS data
+df_ews.to_csv('data_export/'+dir_name+'/ews.csv')
 
-#
-#### Export power spectrum (empirical data)
-##
-### Chlorella pspecs
-##df_pspec_chlor = df_pspec.loc['Chlorella','Empirical'].dropna()
-##df_pspec_chlor.to_csv('data_export/'+dir_name+'/pspec_chlor.csv')
-##
-##
-### Brachionus pspecs
-##df_pspec_brach = df_pspec.loc['Brachionus', 'Empirical'].dropna()
-##df_pspec_brach.to_csv('data_export/'+dir_name+'/pspec_brach.csv')
-#
-#
 
 
