@@ -69,7 +69,7 @@ dt2 = 1 # spacing between time-series for EWS computation
 rw = 1 # rolling window (compute EWS using full time-series)
 span = 1 # span (take the whole dataset as stationary)
 lags = [1,2,3] # autocorrelation lag times
-ews = ['var','ac','sd','cv','skew','kurt','smax'] # EWS to compute
+ews = ['var','ac','sd','cv','skew','kurt','smax','smax/var','smax/mean'] # EWS to compute
 ham_length = 40 # number of data points in Hamming window
 ham_offset = 0.5 # proportion of Hamming window to offset by upon each iteration
 pspec_roll_offset = 10 # offset for rolling window when doing spectrum metrics
@@ -84,10 +84,10 @@ pspec_roll_offset = 10 # offset for rolling window when doing spectrum metrics
 
 
 # Noise parameters
-amp_dem_x = 0.1 # amplitude of demographic noise
-amp_dem_y = 0.1
-amp_env_x= 0.1 # amplitude of environmental noise
-amp_env_y= 0.1
+amp_dem_x = 0.02 # amplitude of demographic noise
+amp_dem_y = 0.02
+amp_env_x= 0.02 # amplitude of environmental noise
+amp_env_y= 0.02
 
 
 # Model parameters
@@ -122,8 +122,8 @@ def de_fun(state, params, noise):
 
 
 # Growth parameters
-rbVals = np.arange(0, 3.2, 0.5)
-rnbVals = np.arange(-1, 0.2, 0.5)
+rbVals = np.arange(0, 3.2, 0.2)
+rnbVals = np.arange(-1, 0.2, 0.2)
 
 
 
@@ -269,19 +269,140 @@ for rb in rbVals:
 # Concatenate EWS DataFrames
 df_ews_full = pd.concat(appended_ews)
 # Select ews at tmax (the rest should be Nan since using rw=1)
-df_ews = df_ews_full[df_ews_full.index==tmax-1].reset_index(drop=True).set_index(['rb', 'rnb','Variable'])
+df_ews = df_ews_full[df_ews_full.index==tmax-1].reset_index(drop=True).set_index(['Variable','rb','rnb'])
 
 
 # Concatenate power spec DataFrames
 df_pspec_full = pd.concat(appended_pspec)
 # Select pspec at tmax (the rest should be Nan since using rw=1)
-df_pspec = df_pspec_full[df_pspec_full.index==tmax-1].reset_index().set_index(['rb', 'rnb','Variable','Frequency'])
+df_pspec = df_pspec_full[df_pspec_full.index==tmax-1].reset_index().set_index(['Variable','rb', 'rnb','Frequency'])
+
+
+
+
+#-------------------------
+# Plot stationary EWS on plane of (rb, rnb)
+#–-------------------------
+
+
+
+
+## Variance
+
+# Breeding population variance
+df_plot = df_ews.loc['Breeding'].reset_index().pivot(index='rb', columns='rnb', values='Variance').iloc[::-1]
+plt.figure(figsize=(3,3))
+ax = plt.axes()
+sns.heatmap(df_plot, cmap='RdYlGn', vmin=0, vmax=500, ax=ax, 
+            xticklabels=1,
+            yticklabels=1)
+ax.set_title('Breeding population: Variance')
+plt.show()
+
+# Non-breeding population variance
+df_plot = df_ews.loc['Non-breeding'].reset_index().pivot(index='rb', columns='rnb', values='Variance').iloc[::-1]
+plt.figure(figsize=(3,3))
+ax = plt.axes()
+sns.heatmap(df_plot, cmap='RdYlGn', vmin=0, vmax=500, ax=ax, 
+            xticklabels=1,
+            yticklabels=1)
+ax.set_title('Non-breeding population: Variance')
+plt.show()
+
+
+
+
+## Coefficient of variation
+
+
+# Breeding population
+df_plot = df_ews.loc['Breeding'].reset_index().pivot(index='rb', columns='rnb', values='Coefficient of variation').iloc[::-1]
+plt.figure(figsize=(3,3))
+ax = plt.axes()
+sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
+            xticklabels=1,
+            yticklabels=1)
+ax.set_title('Breeding population: Coefficient of variation')
+plt.show()
+
+# Non-breeding population
+df_plot = df_ews.loc['Non-breeding'].reset_index().pivot(index='rb', columns='rnb', values='Coefficient of variation').iloc[::-1]
+plt.figure(figsize=(3,3))
+ax = plt.axes()
+sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
+            xticklabels=1,
+            yticklabels=1)
+ax.set_title('Non-breeding population: Coefficient of variation')
+plt.show()
+
+
+
+
+## Smax/Var
+
+
+# Breeding population
+df_plot = df_ews.loc['Breeding'].reset_index().pivot(index='rb', columns='rnb', values='Smax/Var').iloc[::-1]
+plt.figure(figsize=(3,3))
+ax = plt.axes()
+sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
+            xticklabels=1,
+            yticklabels=1)
+ax.set_title('Breeding population: Smax/Var')
+plt.show()
+
+# Non-breeding population
+df_plot = df_ews.loc['Non-breeding'].reset_index().pivot(index='rb', columns='rnb', values='Smax/Var').iloc[::-1]
+plt.figure(figsize=(3,3))
+ax = plt.axes()
+sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
+            xticklabels=1,
+            yticklabels=1)
+ax.set_title('Non-breeding population: Smax/Var')
+plt.show()
+
+
+
+## Lag-1 AC
+
+
+# Breeding population
+df_plot = df_ews.loc['Breeding'].reset_index().pivot(index='rb', columns='rnb', values='Lag-1 AC').iloc[::-1]
+plt.figure(figsize=(3,3))
+ax = plt.axes()
+sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
+            xticklabels=1,
+            yticklabels=1)
+ax.set_title('Breeding population: Lag-1 AC')
+plt.show()
+
+# Non-breeding population
+df_plot = df_ews.loc['Non-breeding'].reset_index().pivot(index='rb', columns='rnb', values='Lag-1 AC').iloc[::-1]
+plt.figure(figsize=(3,3))
+ax = plt.axes()
+sns.heatmap(df_plot, cmap='RdYlGn', ax=ax, 
+            xticklabels=1,
+            yticklabels=1)
+ax.set_title('Non-breeding population: Lag-1 AC')
+plt.show()
 
 
 
 
 
 
+
+#
+#
+#
+## Plot for non-breeding population
+#plt.figure(figsize=(3,3))
+#ax = plt.axes()
+#sns.heatmap(df_plot_y, cmap='RdYlGn', vmin=0, ax=ax,
+#            xticklabels=8,
+#            yticklabels=8)
+#ax.set_title('Breeding population: size')
+#plt.show()
 
 
 

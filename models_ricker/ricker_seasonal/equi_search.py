@@ -61,7 +61,7 @@ def find_equi(rb, rnb):
     '''
     
     # Parameters
-    s0 = [400,200] # Initial condition
+    s0 = [rb/alpha_b,rb/alpha_b] # Initial condition
     tmax = 2000     # Time steps to simulate
     eps = 0.1    # Error margin required for equilibria convergence
     
@@ -95,8 +95,8 @@ def find_equi(rb, rnb):
 # Find equilibrium values over a sweep of growth parameters
      
 # Growth parameters
-rbVals = np.arange(0,4.05,0.05)
-rnbVals = np.arange(-3,0.05,0.05)
+rbVals = np.arange(0,4.05,0.2)
+rnbVals = np.arange(-3,0.05,0.2)
 
 
 
@@ -117,12 +117,12 @@ df_equi = pd.DataFrame(list_temp, columns = ['rb','rnb','x','y']).round({'rb': 2
 
 
 # Remove non-numeric entries
-df_equi['Non-breeding_num'] = pd.to_numeric(df_equi['Non-breeding'], errors='coerce')
-df_equi['Breeding_num'] = pd.to_numeric(df_equi['Breeding'], errors='coerce')
+df_equi['x_num'] = pd.to_numeric(df_equi['x'], errors='coerce')
+df_equi['y_num'] = pd.to_numeric(df_equi['y'], errors='coerce')
 
 
-df_plot_x = df_equi.pivot(index='rb', columns='rnb', values='Non-breeding_num').iloc[::-1]
-df_plot_y = df_equi.pivot(index='rb', columns='rnb', values='Breeding_num').iloc[::-1]
+df_plot_x = df_equi.pivot(index='rb', columns='rnb', values='x_num').iloc[::-1]
+df_plot_y = df_equi.pivot(index='rb', columns='rnb', values='y_num').iloc[::-1]
 
 
 
@@ -133,7 +133,7 @@ ax = plt.axes()
 sns.heatmap(df_plot_x, cmap='RdYlGn', vmin=0, vmax=500, ax=ax, 
             xticklabels=8,
             yticklabels=8)
-ax.set_title('Non-breedinge population size')
+ax.set_title('Non-breedinge population: size')
 plt.show()
 
 # Plot for non-breeding population
@@ -142,13 +142,15 @@ ax = plt.axes()
 sns.heatmap(df_plot_y, cmap='RdYlGn', vmin=0, ax=ax,
             xticklabels=8,
             yticklabels=8)
-ax.set_title('Breeding population size')
+ax.set_title('Breeding population: size')
 plt.show()
 
 
 
-# Export as csv
-df_equi.to_csv('data_export/equi_data/equi_data1.csv')
+#
+#
+## Export as csv
+#df_equi.to_csv('data_export/equi_data/equi_data1.csv')
 
 
 
