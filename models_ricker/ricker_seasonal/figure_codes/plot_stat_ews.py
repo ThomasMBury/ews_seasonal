@@ -107,12 +107,12 @@ for ax in axes.flatten():
         spine.set_visible(True)
     
 
-
+# Export plot
        
         
-#---------------------
+#------------------------------
 # Non-breeding population plot
-#--------
+#--------------------------------
 
 
 
@@ -170,6 +170,14 @@ for ax in axes.flatten():
     for _, spine in ax.spines.items():
         spine.set_visible(True)
     
+
+
+
+
+
+
+
+
 
 
 
