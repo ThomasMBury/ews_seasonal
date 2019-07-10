@@ -29,7 +29,7 @@ from cross_corr import cross_corr
 #–----------------------
 
 # Name of directory within data_export
-dir_name = 'trans_r'
+dir_name = 'trans_r2'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -45,7 +45,7 @@ dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
 tmax = 400
 tburn = 100 # burn-in period
-numSims = 5
+numSims = 100
 seed = 1 # random number generation seed
 
 
@@ -55,9 +55,9 @@ rw = 0.4 # rolling window
 span = 0.5 # Lowess span
 lags = [1,2,3] # autocorrelation lag times
 ews = ['var','ac','sd','cv','skew','kurt','smax','smax/var','smax/mean'] # EWS to compute
-ham_length = 80 # number of data points in Hamming window
+ham_length = 40 # number of data points in Hamming window
 ham_offset = 0.5 # proportion of Hamming window to offset by upon each iteration
-pspec_roll_offset = 10 # offset for rolling window when doing spectrum metrics
+pspec_roll_offset = 20 # offset for rolling window when doing spectrum metrics
 
 
 #----------------------------------
@@ -251,6 +251,35 @@ df_ews_deviations = df_ews.std(level=('Variable','Time'))
 
 # Realisation number to plot
 plot_num = 1
+var = 'x'
+## Plot of trajectory, smoothing and EWS of var (x or y)
+fig1, axes = plt.subplots(nrows=6, ncols=1, sharex=True, figsize=(6,8))
+df_ews.loc[plot_num,var][['State variable','Smoothing']].plot(ax=axes[0],
+          title='Early warning signals for a single realisation')
+df_ews.loc[plot_num,var][['Variance']].plot(ax=axes[1], legend=True)
+df_ews.loc[plot_num,var]['Coefficient of variation'].plot(ax=axes[2],legend=True)
+df_ews.loc[plot_num,var][['Lag-1 AC']].plot(ax=axes[2], secondary_y=True,legend=True)
+df_ews.loc[plot_num,var]['Smax/Var'].dropna().plot(ax=axes[3],legend=True)
+df_ews.loc[plot_num,var]['Smax/Mean'].dropna().plot(ax=axes[4],legend=True)
+df_ews.loc[plot_num,var]['Skewness'].plot(ax=axes[5],legend=True)
+
+# Realisation number to plot
+plot_num = 2
+var = 'x'
+## Plot of trajectory, smoothing and EWS of var (x or y)
+fig1, axes = plt.subplots(nrows=6, ncols=1, sharex=True, figsize=(6,8))
+df_ews.loc[plot_num,var][['State variable','Smoothing']].plot(ax=axes[0],
+          title='Early warning signals for a single realisation')
+df_ews.loc[plot_num,var][['Variance']].plot(ax=axes[1], legend=True)
+df_ews.loc[plot_num,var]['Coefficient of variation'].plot(ax=axes[2],legend=True)
+df_ews.loc[plot_num,var][['Lag-1 AC']].plot(ax=axes[2], secondary_y=True,legend=True)
+df_ews.loc[plot_num,var]['Smax/Var'].dropna().plot(ax=axes[3],legend=True)
+df_ews.loc[plot_num,var]['Smax/Mean'].dropna().plot(ax=axes[4],legend=True)
+df_ews.loc[plot_num,var]['Skewness'].plot(ax=axes[5],legend=True)
+
+
+# Realisation number to plot
+plot_num = 3
 var = 'x'
 ## Plot of trajectory, smoothing and EWS of var (x or y)
 fig1, axes = plt.subplots(nrows=6, ncols=1, sharex=True, figsize=(6,8))
