@@ -28,7 +28,7 @@ from cross_corr import cross_corr
 #–----------------------
 
 # Name of directory within data_export
-dir_name = 'trans_rnb_tmax400'
+dir_name = 'trans_rnb_skewtrial'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -45,7 +45,7 @@ t0 = 0
 tmax = 400
 tburn = 200 # burn-in period
 numSims = 100
-seed = 0 # random number generation seed
+seed = 3 # random number generation seed
 
 
 # EWS parameters
@@ -67,24 +67,24 @@ pspec_roll_offset = 10 # offset for rolling window when doing spectrum metrics
 
 # Model parameters
     
-rb = 1.2   # Growth rate for breeding period (2.24 in paper)
+rb = 2.24   # Growth rate for breeding period (2.24 in paper)
 rnbEmp = -0.0568 # empirically measured rnb
 alpha_b = 0.01 # density dependent effects in breeding period
 alpha_nb = 0.000672 # density dependent effects in non-breeding period
 
 
 # Noise parameters
-amp_dem_b = 0.1 # amplitude of demographic noise
-amp_dem_nb = 0.1
-amp_env_b = 0.1 # amplitude of environmental noise
-amp_env_nb = 0.1
+amp_dem_b = 0.02 # amplitude of demographic noise
+amp_dem_nb = 0.02
+amp_env_b = 0.02 # amplitude of environmental noise
+amp_env_nb = 0.02
 
 
 
 # Bifurcation parameter
-rnb_l = -1.5
-rnb_h = rnbEmp
-rnb_crit = -1
+rnb_l = -2.6
+rnb_h = -1.4
+rnb_crit = -2.4
 
 
 # Function dynamic - outputs the subsequent state
@@ -335,6 +335,29 @@ axes[5].set_xlim(0,tmax)
 
 
 
+# Realisation number to plot
+plot_num = 3
+## Plot of trajectory, smoothing and EWS of var (x or y)
+fig1, axes = plt.subplots(nrows=6, ncols=1, sharex=True, figsize=(6,6))
+df_ews.loc[plot_num]['State variable'].unstack(level=0).plot(ax=axes[0],
+          title='Early warning signals for a single realisation')
+df_ews.loc[plot_num]['Variance'].unstack(level=0).plot(ax=axes[1],legend=False)
+df_ews.loc[plot_num]['Coefficient of variation'].unstack(level=0).plot(ax=axes[2],legend=False)
+df_ews.loc[plot_num]['Smax/Var'].dropna().unstack(level=0).plot(ax=axes[3], legend=False)
+df_ews.loc[plot_num]['Lag-1 AC'].unstack(level=0).plot(ax=axes[4], legend=False)
+df_ews.loc[plot_num]['Skewness'].unstack(level=0).plot(ax=axes[5], legend=False)
+
+
+
+
+axes[0].set_ylabel('Population')
+axes[0].legend(title=None)
+axes[1].set_ylabel('Variance')
+axes[2].set_ylabel('CoV')
+axes[3].set_ylabel('Smax/Var')
+axes[4].set_ylabel('Lag-1 AC')
+axes[5].set_ylabel('Skewness')
+axes[5].set_xlim(0,tmax)
 
 
 #------------------------------------

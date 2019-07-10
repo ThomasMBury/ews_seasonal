@@ -77,7 +77,7 @@ def find_equi(rb, rnb):
     
     if abs(np.linalg.norm(s[-1]) - np.linalg.norm(s[-2])) < eps:
         if np.linalg.norm(s[-1]) < 0.01:
-            out = np.array([0,0])
+            out = ['Extinct']*2
         else:
             out = s[-1]
         return out
@@ -95,7 +95,7 @@ def find_equi(rb, rnb):
 # Find equilibrium values over a sweep of growth parameters
      
 # Growth parameters
-rbVals = np.arange(0,3.05,0.1).round(2)
+rbVals = np.arange(0,4.05,0.1).round(2)
 rnbVals = np.arange(-3,0.05,0.1).round(2)
 
 
@@ -116,7 +116,7 @@ for rb in rbVals:
 df_equi = pd.DataFrame(list_temp, columns = ['rb','rnb','x','y']).round({'rb': 2, 'rnb': 2})
 
 
-# Remove non-numeric entries
+# Replace string entries with NaN
 df_equi['x_num'] = pd.to_numeric(df_equi['x'], errors='coerce')
 df_equi['y_num'] = pd.to_numeric(df_equi['y'], errors='coerce')
 
@@ -148,7 +148,7 @@ plt.show()
 
 
 # Export as csv
-df_equi.to_csv('data_export/equi_data/equi_data1.csv')
+df_equi.to_csv('data_export/equi_data/equi_data.csv')
 
 
 

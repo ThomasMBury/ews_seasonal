@@ -28,7 +28,7 @@ from cross_corr import cross_corr
 #–----------------------
 
 # Name of directory within data_export 
-dir_name = 'trans_rb_temp'
+dir_name = 'trans_rb_2'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -44,8 +44,8 @@ dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
 tmax = 400
 tburn = 200 # burn-in period
-numSims = 3
-seed = 1 # random number generation seed
+numSims = 100
+seed = 11 # random number generation seed
 
 
 # EWS parameters
@@ -67,23 +67,23 @@ pspec_roll_offset = 10 # offset for rolling window when doing spectrum metrics
 
 # Model parameters
     
-rnb = -0.0568     # Growth rate for breeding period
+rnb = -0.4     # Growth rate for non-breeding period (emp. -0.0568)
 alpha_b = 0.01 # density dependent effects in breeding period
 alpha_nb = 0.000672 # density dependent effects in non-breeding period
 
 
 # Noise parameters
-amp_dem_b = 0.1 # amplitude of demographic noise
-amp_dem_nb = 0.1
-amp_env_b = 0.1 # amplitude of environmental noise
-amp_env_nb = 0.1
+amp_dem_b = 0.02 # amplitude of demographic noise
+amp_dem_nb = 0.02
+amp_env_b = 0.02 # amplitude of environmental noise
+amp_env_nb = 0.02
 
 
 
 # Bifurcation parameter
-rb_l = -0.2
-rb_h = 1.2
-rb_crit = 0
+rb_l = 0.2
+rb_h = 1.8
+rb_crit = 0.4
 
 
 # Function dynamic - outputs the subsequent state
@@ -311,8 +311,8 @@ axes[0].set_ylabel('Population')
 axes[0].legend(title=None)
 axes[1].set_ylabel('CoV')
 axes[2].set_ylabel('Lag-1 AC')
-axes[3].set_ylabel('Skewness')
-axes[4].set_ylabel('Smax/Var')
+axes[3].set_ylabel('Smax/Var')
+axes[4].set_ylabel('Skewness')
 
 # Realisation number to plot
 plot_num = 3
