@@ -29,7 +29,7 @@ from cross_corr import cross_corr
 #–----------------------
 
 # Name of directory within data_export
-dir_name = 'trans_r2'
+dir_name = 'trans_r_long'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -43,7 +43,7 @@ if not os.path.exists('data_export/'+dir_name):
 # Simulation parameters
 dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
-tmax = 400
+tmax = 1000
 tburn = 100 # burn-in period
 numSims = 100
 seed = 1 # random number generation seed
@@ -75,7 +75,7 @@ amp_env = 0.1	# Environmental noise amplitude
 
 # Bifurcation parameter
 rl = -0.2
-rh = 1.2
+rh = 1
 rcrit = 0
 
 # Function dynamic - outputs the subsequent state
