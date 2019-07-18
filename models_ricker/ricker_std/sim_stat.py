@@ -282,8 +282,8 @@ df_pspec_norm = df_pspec['Empirical']/df_ews['Variance']
 df_ews.to_csv('data_export/'+dir_name+'/ews.csv')
 
 ## Export power spectrum data
-df_ews.to_csv('data_export/'+dir_name+'/pspec.csv')
-
+df_pspec.to_csv('data_export/'+dir_name+'/pspec.csv')
+df_pspec_norm.to_csv('data_export/'+dir_name+'/pspec_norm.csv', header='Empirical')
 
 
 
