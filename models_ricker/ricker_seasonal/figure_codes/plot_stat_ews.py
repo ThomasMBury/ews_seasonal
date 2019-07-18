@@ -25,7 +25,7 @@ import seaborn as sns
 
 
 # Import data
-df_ews = pd.read_csv('../data_export/ews_stat_temp/ews.csv', index_col='Variable')
+df_ews = pd.read_csv('../data_export/ews_stat_tmax4000/ews.csv', index_col='Variable')
 df_equi = pd.read_csv('../data_export/equi_data/equi_data.csv')
 
 
@@ -120,8 +120,8 @@ for ax in axes.flatten():
         spine.set_visible(True)
     
 
-## Export plot
-#plt.savefig('../figures/stat_ews/ews_stat_breeding.png', dpi=dpi)
+# Export plot
+plt.savefig('../figures/stat_ews/ews_stat_breeding.png', dpi=dpi)
        
      
 
@@ -198,9 +198,9 @@ axes[2,1].set_ylabel('')
 for ax in axes.flatten(): 
     for _, spine in ax.spines.items():
         spine.set_visible(True)
-#    
-## Export plot
-#plt.savefig('../figures/stat_ews/ews_stat_nonbreeding.png', dpi=dpi)
+    
+# Export plot
+plt.savefig('../figures/stat_ews/ews_stat_nonbreeding.png', dpi=dpi)
        
      
 
