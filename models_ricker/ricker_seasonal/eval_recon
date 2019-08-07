@@ -13,11 +13,75 @@ import numpy as np
 import pandas as pd
 
 
+# Imoprt trajectoreis dataframe
+df_traj = pd.read_csv('data_export/ews_stat_evaltest/traj.csv', index_col=['rb','rnb','Time'])
+df_traj.rename(columns={'Non-breeding':'x', 'Breeding':'y'}, inplace=True)
+
+rb_vals = df_traj.index.levels[0]
+rnb_vals = df_traj.index.levels[1]
+
+# Select time series to analyse
+df_temp = df_traj.loc[(rb_vals[3],rnb_vals[6])]
 
 
 
 
+# Define function to compute lag-1 autocovariance matrix
+def autocov(df_in):
+    '''
+    Computes the autocovariance of two time-series
+    Input:
+        df_in: DataFrame with two columns indexed by time
+    Ouptut:
+        np.array of autocovariance matrix
+    '''
+    
+    # Obtain column names of df_in
+    col_names = df_in.columns
+    
+    # Create columns shifted forward by 1 to compute autocovariance
+    df_in['xshift'] =  df_temp[col_names[0]].shift(1)
+    df_in['yshift'] =  df_temp[col_names[1]].shift(1)
 
+    # Compute components of autocovariance matrix
+    x0x1 = df_in[[col_names[0],'x_shift']].cov().iloc[0,1]
+    x1y0 = df_in[[col_names[1],'x_shift']].cov().iloc[0,1]
+    x0y1 = df_in[[col_names[0],'y_shift']].cov().iloc[0,1]
+    y0y1 = df_in[[col_names[1],'y_shift']].cov().iloc[0,1]
+
+    # Assign to matrix
+    acov = np.array([[x0x1,x1y0],[x0y1,y0y1]])
+    
+    return acov
+
+
+# Create columns shifted forward by 1 to compute autocovariance
+df_temp['x_lag1']=df_temp['x'].shift(1)
+df_temp['y_lag1']=df_temp['y'].shift(1)
+
+
+
+df_temp[['x','y']].plot()
+
+
+
+# Compute covariance matrix
+cov = np.array(df_temp[['x','y']].cov())
+
+# Compute lag-1 autocovariance matrix
+
+
+
+acov = np.array([[x0x1,x1y0],[x0y1,y0y1]])
+
+
+# Estimator of Jacobian matrix
+jac = np.matmul( acov, np.linalg.inv(cov))
+
+# Compute eigenvalues
+evals, evecs = np.linalg.eig(jac)
+
+print('Eigenvalues are {} and {}'.format(evals[0],evals[1]))
 
 
 
