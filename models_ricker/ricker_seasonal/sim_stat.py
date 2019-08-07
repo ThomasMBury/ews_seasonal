@@ -42,7 +42,7 @@ def apply_inplace(df, field, fun):
 #–----------------------
 
 # Name of directory within data_export
-dir_name = 'ews_stat_tmax4000'
+dir_name = 'ews_stat_evaltest'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -58,7 +58,7 @@ if not os.path.exists('data_export/'+dir_name):
 # Simulation parameters
 dt = 1
 t0 = 0
-tmax = 4000 # make large (to get idealised statistics from stationary distribution)
+tmax = 1000 # make large (to get idealised statistics from stationary distribution)
 tburn = 200 # burn-in period
 seed = 0 # random number generation seed
 
@@ -122,8 +122,8 @@ def de_fun(state, params, noise):
 
 
 # Growth parameters
-rbVals = np.arange(0, 3.05, 0.1).round(2)
-rnbVals = np.arange(-3, 0.05, 0.1).round(2)
+rbVals = np.arange(0, 3.05, 0.5).round(2)
+rnbVals = np.arange(-3, 0.05, 0.5).round(2)
 
 
 
@@ -204,9 +204,8 @@ for rb in rbVals:
 df_traj = pd.concat(list_traj_append)
 df_traj.set_index(['rb','rnb','Time'], inplace=True)
 
-
-
-
+# Export trajectories
+df_traj.to_csv('data_export/'+dir_name+'/traj.csv')
 
 
 #----------------------
@@ -276,9 +275,6 @@ df_ews = df_ews_full[df_ews_full.index==tmax-1].reset_index(drop=True).set_index
 df_pspec_full = pd.concat(appended_pspec)
 # Select pspec at tmax (the rest should be Nan since using rw=1)
 df_pspec = df_pspec_full[df_pspec_full.index==tmax-1].reset_index().set_index(['Variable','rb', 'rnb','Frequency'])
-
-
-
 
 
 
