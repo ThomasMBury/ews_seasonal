@@ -122,8 +122,8 @@ def de_fun(state, params, noise):
 
 
 # Growth parameters
-rbVals = np.arange(0, 3.05, 0.5).round(2)
-rnbVals = np.arange(-3, 0.05, 0.5).round(2)
+rbVals = np.arange(0, 3.05, 0.2).round(2)
+rnbVals = np.arange(-3, 0.05, 0.2).round(2)
 
 
 
@@ -208,84 +208,86 @@ df_traj.set_index(['rb','rnb','Time'], inplace=True)
 df_traj.to_csv('data_export/'+dir_name+'/traj.csv')
 
 
-#----------------------
-## Executea ews_compute for each parameter combination
-#---------------------
 
-
-# Set up a list to store output dataframes from ews_compute
-# We will concatenate them at the end
-appended_ews = []
-appended_pspec = []
-
-
-print('\nBegin EWS computation\n')
-
-# Loop through growth rates
-for rb in rbVals:
-    for rnb in rnbVals:
-            
-        # Loop through state variable
-        for var in ['Non-breeding', 'Breeding']:
-            
-            
-            # If time-series goes extinct at any point, do not compute EWS
-            if any(df_traj.loc[(rb, rnb)]['Non-breeding'] == 0):
-                break
-            ews_dic = ewstools.ews_compute(df_traj.loc[(rb,rnb)][var], 
-                              roll_window = rw,
-                              smooth = 'Lowess',
-                              span = span,
-                              lag_times = lags, 
-                              ews = ews,
-                              ham_length = ham_length,
-                              ham_offset = ham_offset,
-                              sweep = False
-                              )
-            
-            # The DataFrame of EWS
-            df_ews_temp = ews_dic['EWS metrics']
-            # The DataFrame of power spectra
-            df_pspec_temp = ews_dic['Power spectrum']
-            
-            # Include a column in the DataFrames for r value and variable
-            df_ews_temp['rb'] = rb
-            df_ews_temp['rnb'] = rnb
-            df_ews_temp['Variable'] = var
-            
-            df_pspec_temp['rb'] = rb
-            df_pspec_temp['rnb'] = rnb
-            df_pspec_temp['Variable'] = var
-                    
-            # Add DataFrames to list
-            appended_ews.append(df_ews_temp)
-            appended_pspec.append(df_pspec_temp)
-            
-        # Print status
-        print('EWS for (rb, rnb) = (%.2f, %.2f) complete' %(rb,rnb))
-    
-
-# Concatenate EWS DataFrames
-df_ews_full = pd.concat(appended_ews)
-# Select ews at tmax (the rest should be Nan since using rw=1)
-df_ews = df_ews_full[df_ews_full.index==tmax-1].reset_index(drop=True).set_index(['Variable','rb','rnb'])
-
-
-# Concatenate power spec DataFrames
-df_pspec_full = pd.concat(appended_pspec)
-# Select pspec at tmax (the rest should be Nan since using rw=1)
-df_pspec = df_pspec_full[df_pspec_full.index==tmax-1].reset_index().set_index(['Variable','rb', 'rnb','Frequency'])
-
-
-
-
-#------------------------------------
-## Export data for plotting elsewhere
-#-----------------------------------
-
-
-## Export EWS data
-df_ews.to_csv('data_export/'+dir_name+'/ews.csv')
-
+#
+##----------------------
+### Executea ews_compute for each parameter combination
+##---------------------
+#
+#
+## Set up a list to store output dataframes from ews_compute
+## We will concatenate them at the end
+#appended_ews = []
+#appended_pspec = []
+#
+#
+#print('\nBegin EWS computation\n')
+#
+## Loop through growth rates
+#for rb in rbVals:
+#    for rnb in rnbVals:
+#            
+#        # Loop through state variable
+#        for var in ['Non-breeding', 'Breeding']:
+#            
+#            
+#            # If time-series goes extinct at any point, do not compute EWS
+#            if any(df_traj.loc[(rb, rnb)]['Non-breeding'] == 0):
+#                break
+#            ews_dic = ewstools.ews_compute(df_traj.loc[(rb,rnb)][var], 
+#                              roll_window = rw,
+#                              smooth = 'Lowess',
+#                              span = span,
+#                              lag_times = lags, 
+#                              ews = ews,
+#                              ham_length = ham_length,
+#                              ham_offset = ham_offset,
+#                              sweep = False
+#                              )
+#            
+#            # The DataFrame of EWS
+#            df_ews_temp = ews_dic['EWS metrics']
+#            # The DataFrame of power spectra
+#            df_pspec_temp = ews_dic['Power spectrum']
+#            
+#            # Include a column in the DataFrames for r value and variable
+#            df_ews_temp['rb'] = rb
+#            df_ews_temp['rnb'] = rnb
+#            df_ews_temp['Variable'] = var
+#            
+#            df_pspec_temp['rb'] = rb
+#            df_pspec_temp['rnb'] = rnb
+#            df_pspec_temp['Variable'] = var
+#                    
+#            # Add DataFrames to list
+#            appended_ews.append(df_ews_temp)
+#            appended_pspec.append(df_pspec_temp)
+#            
+#        # Print status
+#        print('EWS for (rb, rnb) = (%.2f, %.2f) complete' %(rb,rnb))
+#    
+#
+## Concatenate EWS DataFrames
+#df_ews_full = pd.concat(appended_ews)
+## Select ews at tmax (the rest should be Nan since using rw=1)
+#df_ews = df_ews_full[df_ews_full.index==tmax-1].reset_index(drop=True).set_index(['Variable','rb','rnb'])
+#
+#
+## Concatenate power spec DataFrames
+#df_pspec_full = pd.concat(appended_pspec)
+## Select pspec at tmax (the rest should be Nan since using rw=1)
+#df_pspec = df_pspec_full[df_pspec_full.index==tmax-1].reset_index().set_index(['Variable','rb', 'rnb','Frequency'])
+#
+#
+#
+#
+##------------------------------------
+### Export data for plotting elsewhere
+##-----------------------------------
+#
+#
+### Export EWS data
+#df_ews.to_csv('data_export/'+dir_name+'/ews.csv')
+#
 
 
