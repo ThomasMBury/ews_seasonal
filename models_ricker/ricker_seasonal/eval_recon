@@ -55,6 +55,8 @@ def autocov(df_in):
     return acov
 
 
+
+
 # Create columns shifted forward by 1 to compute autocovariance
 df_temp['x_lag1']=df_temp['x'].shift(1)
 df_temp['y_lag1']=df_temp['y'].shift(1)
