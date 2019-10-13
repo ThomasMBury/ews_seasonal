@@ -11,21 +11,22 @@
 #SBATCH --mem=1000MB
 #SBATCH --account=hagrid
 #SBATCH --partition=hagrid_long
-#SBATCH --time=0-01:00:00
-#SBATCH --error="Jobs/job-%j.err"
-#SBATCH --output=Jobs/job-%j.out
+#SBATCH --time=0-05:00:00
+#SBATCH --error=output/stdout/job-%j.err
+#SBATCH --output=output/stdout/job-%j.out
 #SBATCH --ntasks=1
 
 echo Job $SLURM_JOB_ID released
 
 echo Install python modules
-python3 -m pip install -r requirements.txt
+pip install ewstools
+# python3 -m pip install -r requirements.txt
 
+mkdir -p output/job-$1
+cd output/job-$1
 
-mkdir -p Jobs/job-$SLURM_JOB_ID
-cd Jobs/job-$SLURM_JOB_ID
-
-time python3 ../../equi_search.py
+echo Run python file
+python3 ../../sim_stat_hag.py $1
 
 cd ../../
 
