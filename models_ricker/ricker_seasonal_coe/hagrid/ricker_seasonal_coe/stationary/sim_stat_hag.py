@@ -40,7 +40,8 @@ def apply_inplace(df, field, fun):
 
 
 # Get parameter a from external input
-a = float(sys.argv[1])
+sigma = float(sys.argv[1])
+a = float(sys.argv[2])
 print("Running simulation for a={}".format(a))
 
 #---------------------
@@ -81,10 +82,10 @@ pspec_roll_offset = 20 # offset for rolling window when doing spectrum metrics
 
 
 # Noise parameters
-amp_dem_x = 0.01 # amplitude of demographic noise
-amp_dem_y = 0.01
-amp_env_x= 0.01 # amplitude of environmental noise
-amp_env_y= 0.01
+amp_dem_x = sigma # amplitude of demographic noise
+amp_dem_y = sigma
+amp_env_x= sigma # amplitude of environmental noise
+amp_env_y= sigma
 
 
 # Model parameters

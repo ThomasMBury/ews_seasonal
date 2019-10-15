@@ -22,11 +22,17 @@ echo Install python modules
 pip install ewstools
 # python3 -m pip install -r requirements.txt
 
-mkdir -p output/job-$1
-cd output/job-$1
+mkdir -p output/job-$SLURM_JOB_ID
+cd output/job-$SLURM_JOB_ID
+
+# Create text file with parameters specific to this job
+head -n 1 ../../par_table.txt >> pars.txt
+head -n $1 | tail -n 1 ../../par_table.txt >> pars.txt
+
+
 
 echo Run python file
-python3 ../../sim_stat_hag.py $1
+python3 ../../sim_stat_hag.py `head -n $1 | tail -n 1 ../../par_table.txt`
 
 cd ../../
 
