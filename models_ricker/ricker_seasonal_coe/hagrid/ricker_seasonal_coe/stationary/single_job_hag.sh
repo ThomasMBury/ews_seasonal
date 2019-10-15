@@ -27,12 +27,13 @@ cd output/job-$SLURM_JOB_ID
 
 # Create text file with parameters specific to this job
 head -n 1 ../../par_table.txt >> pars.txt
-head -n $1 | tail -n 1 ../../par_table.txt >> pars.txt
+head -n $1 ../../par_table.txt | tail -n 1 >> pars.txt
 
 
 
-echo Run python file
-python3 ../../sim_stat_hag.py `head -n $1 | tail -n 1 ../../par_table.txt`
+echo Run python file with parameters 
+echo `head -n $1 ../../par_table.txt | tail -n 1`
+python3 ../../sim_stat_hag.py `head -n $1 ../../par_table.txt | tail -n 1`
 
 cd ../../
 

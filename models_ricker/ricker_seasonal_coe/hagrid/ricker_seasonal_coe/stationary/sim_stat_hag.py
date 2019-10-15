@@ -40,6 +40,7 @@ def apply_inplace(df, field, fun):
 
 
 # Get parameter a from external input
+print(sys.argv[1])
 sigma = float(sys.argv[1])
 a = float(sys.argv[2])
 print("Running simulation for a={}".format(a))

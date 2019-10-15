@@ -1,0 +1,4 @@
+  File "../../sim_stat_hag.py", line 43
+    print sys.argv[1]
+            ^
+SyntaxError: Missing parentheses in call to 'print'. Did you mean print(sys.argv[1])?

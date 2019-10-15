@@ -1,0 +1,21 @@
+Exception:
+Traceback (most recent call last):
+  File "/usr/lib/python2.7/dist-packages/pip/basecommand.py", line 215, in main
+    status = self.run(options, args)
+  File "/usr/lib/python2.7/dist-packages/pip/commands/install.py", line 360, in run
+    prefix=options.prefix_path,
+  File "/usr/lib/python2.7/dist-packages/pip/req/req_set.py", line 784, in install
+    **kwargs
+  File "/usr/lib/python2.7/dist-packages/pip/req/req_install.py", line 851, in install
+    self.move_wheel_files(self.source_dir, root=root, prefix=prefix)
+  File "/usr/lib/python2.7/dist-packages/pip/req/req_install.py", line 1064, in move_wheel_files
+    isolated=self.isolated,
+  File "/usr/lib/python2.7/dist-packages/pip/wheel.py", line 507, in move_wheel_files
+    shutil.move(temp_installer, installer)
+  File "/usr/lib/python2.7/shutil.py", line 316, in move
+    copy2(src, real_dst)
+  File "/usr/lib/python2.7/shutil.py", line 144, in copy2
+    copyfile(src, dst)
+  File "/usr/lib/python2.7/shutil.py", line 96, in copyfile
+    with open(src, 'rb') as fsrc:
+IOError: [Errno 2] No such file or directory: '/work/tbury/.local/lib/python2.7/site-packages/pytz-2019.3.dist-info/INSTALLER.pip'
