@@ -22,17 +22,32 @@ import matplotlib.pyplot as plt
 import seaborn as sns
     
 
-# Job number
-jobnum = 523647
+
+## Import locally
+#dir_name = 'noise_0p02_a_0'
+#filepath = '../data_export/ews_stat/'+dir_name+'/'
+
+# Import from hagrid
+jobnum = 523810
 filepath = '../hagrid/ricker_seasonal_coe/stationary/output/job-'+str(jobnum)+'/'
 
 # Import data
 df_ews = pd.read_csv(filepath+'ews.csv', index_col='Variable')
+rb_vals = np.flip(df_ews['rb'].unique())
+rnb_vals = np.flip(df_ews['rnb'].unique())
+
 # Import params
 df_pars = pd.read_csv(filepath+'pars.txt', sep = ' ')
 sigma = df_pars['sigma'].values[0]
 a = df_pars['a'].values[0]
 
+
+# Empirical param values
+rb_emp = 2.24
+rnb_emp = -0.0568
+# Index values
+rb_emp_idx = np.abs(rb_vals-rb_emp).argmin()
+rnb_emp_idx = np.abs(rnb_vals - rnb_emp).argmin()+1
 
 
 # Figure params
@@ -81,6 +96,7 @@ sns.heatmap(df_plot, cmap=sns.diverging_palette(145, 280, s=85, l=25, as_cmap=Tr
 axes[0,0].set_title('Equilibrium')
 axes[0,0].set_xlabel('')
 axes[0,0].set_ylabel('$r_b$')
+axes[0,0].scatter(rnb_emp_idx,rb_emp_idx,marker='x',color='k')
 
 
 # Variance
@@ -90,6 +106,8 @@ axes[0,1].set_title('Variance')
 axes[0,1].set_xlabel('')
 axes[0,1].set_ylabel('')
 axes[0,1].get_yaxis().set_ticklabels([])
+axes[0,1].scatter(rnb_emp_idx,rb_emp_idx,marker='x',color='k')
+
 
 # Coefficient of variation
 df_plot = df_ews.loc['Breeding'].reset_index().pivot(index='rb', columns='rnb', values='Coefficient of variation').iloc[::-1]
@@ -97,6 +115,8 @@ sns.heatmap(df_plot, cmap=cmap, ax=axes[1,0], vmax=0.1)
 axes[1,0].set_title('C.V.')
 axes[1,0].set_xlabel('')
 axes[1,0].set_ylabel('$r_b$')
+axes[1,0].scatter(rnb_emp_idx,rb_emp_idx,marker='x',color='k')
+
 
 
 # Smax/Var
@@ -106,6 +126,8 @@ axes[1,1].set_title('Smax/Var')
 axes[1,1].set_xlabel('')
 axes[1,1].set_ylabel('')
 axes[1,1].get_yaxis().set_ticklabels([])
+axes[1,1].scatter(rnb_emp_idx,rb_emp_idx,marker='x',color='k')
+
 
 # Lag-1 AC
 df_plot = df_ews.loc['Breeding'].reset_index().pivot(index='rb', columns='rnb', values='Lag-1 AC').iloc[::-1]
@@ -113,6 +135,8 @@ sns.heatmap(df_plot, cmap=cmap, ax=axes[2,0])
 axes[2,0].set_title('Lag-1 AC')
 axes[2,0].set_xlabel('')
 axes[2,0].set_ylabel('$r_b$')
+axes[2,0].scatter(rnb_emp_idx,rb_emp_idx,marker='x',color='k')
+
 
 # Lag-2 AC
 df_plot = df_ews.loc['Breeding'].reset_index().pivot(index='rb', columns='rnb', values='Lag-2 AC').iloc[::-1]
@@ -121,6 +145,8 @@ axes[2,1].set_title('Lag-2 AC')
 axes[2,1].set_xlabel('')
 axes[2,1].set_ylabel('')
 axes[2,1].get_yaxis().set_ticklabels([])
+axes[2,1].scatter(rnb_emp_idx,rb_emp_idx,marker='x',color='k')
+
 
 
 # Skewness
@@ -129,6 +155,11 @@ sns.heatmap(df_plot, cmap=cmap, ax=axes[3,0],vmin=-0.15, vmax=0.15)
 axes[3,0].set_title('Skewness')
 axes[3,0].set_xlabel('')
 axes[3,0].set_ylabel('')
+axes[3,0].set_xlabel('$r_{nb}$')
+axes[3,0].scatter(rnb_emp_idx,rb_emp_idx,marker='x',color='k')
+
+
+
 
 # Kurtosis
 df_plot = df_ews.loc['Breeding'].reset_index().pivot(index='rb', columns='rnb', values='Kurtosis').iloc[::-1]
@@ -137,6 +168,8 @@ axes[3,1].set_title('Kurtosis')
 axes[3,1].set_xlabel('$r_{nb}$')
 axes[3,1].set_ylabel('')
 axes[3,1].get_yaxis().set_ticklabels([])
+axes[3,1].scatter(rnb_emp_idx,rb_emp_idx,marker='x',color='k')
+
 
 
 # Make frames for plot
@@ -146,7 +179,7 @@ for ax in axes.flatten():
     
 
 # Export plot
-#plt.savefig('../figures/stat_ews/breeding_a'+str(a)+'_sigma'+str(sigma)+'.png', dpi=dpi)
+plt.savefig('../figures/stat_ews/breeding_a'+str(a)+'_sigma'+str(sigma)+'.png', dpi=dpi)
 
    
 #------------------------------
@@ -167,6 +200,8 @@ sns.heatmap(df_plot, cmap=sns.diverging_palette(145, 280, s=85, l=25, as_cmap=Tr
 axes[0,0].set_title('Equilibrium')
 axes[0,0].set_xlabel('')
 axes[0,0].set_ylabel('$r_b$')
+axes[0,0].scatter(rnb_emp_idx,rb_emp_idx,marker='x',color='k')
+
 
 
 # Variance
@@ -176,6 +211,8 @@ axes[0,1].set_title('Variance')
 axes[0,1].set_xlabel('')
 axes[0,1].set_ylabel('')
 axes[0,1].get_yaxis().set_ticklabels([])
+axes[0,1].scatter(rnb_emp_idx,rb_emp_idx,marker='x',color='k')
+
 
 
 # Coefficient of variation
@@ -184,6 +221,8 @@ sns.heatmap(df_plot, cmap=cmap, ax=axes[1,0], vmax=0.4)
 axes[1,0].set_title('C.V.')
 axes[1,0].set_xlabel('')
 axes[1,0].set_ylabel('$r_b$')
+axes[1,0].scatter(rnb_emp_idx,rb_emp_idx,marker='x',color='k')
+
 
 
 # Smax/Var
@@ -193,6 +232,8 @@ axes[1,1].set_title('Smax/Var')
 axes[1,1].set_xlabel('')
 axes[1,1].set_ylabel('')
 axes[1,1].get_yaxis().set_ticklabels([])
+axes[1,1].scatter(rnb_emp_idx,rb_emp_idx,marker='x',color='k')
+
 
 
 # Lag-1 AC
@@ -201,6 +242,8 @@ sns.heatmap(df_plot, cmap=cmap, ax=axes[2,0])
 axes[2,0].set_title('Lag-1 AC')
 axes[2,0].set_xlabel('')
 axes[2,0].set_ylabel('$r_b$')
+axes[2,0].scatter(rnb_emp_idx,rb_emp_idx,marker='x',color='k')
+
 
 # Lag-2 AC
 df_plot = df_ews.loc['Non-breeding'].reset_index().pivot(index='rb', columns='rnb', values='Lag-2 AC').iloc[::-1]
@@ -209,6 +252,8 @@ axes[2,1].set_title('Lag-2 AC')
 axes[2,1].set_xlabel('')
 axes[2,1].set_ylabel('')
 axes[2,1].get_yaxis().set_ticklabels([])
+axes[2,1].scatter(rnb_emp_idx,rb_emp_idx,marker='x',color='k')
+
 
 
 # Skewness
@@ -217,6 +262,10 @@ sns.heatmap(df_plot, cmap=cmap, ax=axes[3,0],vmin=-0.5, vmax=0.5)
 axes[3,0].set_title('Skewness')
 axes[3,0].set_xlabel('')
 axes[3,0].set_ylabel('')
+axes[3,0].set_xlabel('$r_{nb}$')
+axes[3,0].scatter(rnb_emp_idx,rb_emp_idx,marker='x',color='k')
+
+
 
 # Kurtosis
 df_plot = df_ews.loc['Non-breeding'].reset_index().pivot(index='rb', columns='rnb', values='Kurtosis').iloc[::-1]
@@ -225,6 +274,8 @@ axes[3,1].set_title('Kurtosis')
 axes[3,1].set_xlabel('$r_{nb}$')
 axes[3,1].set_ylabel('')
 axes[3,1].get_yaxis().set_ticklabels([])
+axes[3,1].scatter(rnb_emp_idx,rb_emp_idx,marker='x',color='k')
+
 
 
 # Make frames for plot
@@ -233,7 +284,7 @@ for ax in axes.flatten():
         spine.set_visible(True)
     
 # Export plot
-#plt.savefig('../figures/stat_ews/nonbreeding_a'+str(a)+'_sigma'+str(sigma)+'.png', dpi=dpi)
+plt.savefig('../figures/stat_ews/nonbreeding_a'+str(a)+'_sigma'+str(sigma)+'.png', dpi=dpi)
        
      
 

@@ -47,10 +47,10 @@ def apply_inplace(df, field, fun):
 #–----------------------
 
 # Name of directory within data_export
-dir_name = 'ews_stat_temp'
+dir_name = 'noise_0p02_a_0'
 
-if not os.path.exists('data_export/'+dir_name):
-    os.makedirs('data_export/'+dir_name)
+if not os.path.exists('data_export/ews_stat/'+dir_name):
+    os.makedirs('data_export/ews_stat/'+dir_name)
 
 
 
@@ -88,16 +88,16 @@ pspec_roll_offset = 20 # offset for rolling window when doing spectrum metrics
 
 
 # Noise parameters
-amp_dem_x = 0.01 # amplitude of demographic noise
-amp_dem_y = 0.01
-amp_env_x= 0.01 # amplitude of environmental noise
-amp_env_y= 0.01
+amp_dem_x = 0.02 # amplitude of demographic noise
+amp_dem_y = 0.02
+amp_env_x= 0.02 # amplitude of environmental noise
+amp_env_y= 0.02
 
 
 # Model parameters
 alpha_b = 0.01 # density dependent effects in breeding period
 alpha_nb = 0.000672 # density dependent effects in non-breeding period
-a = 0.001 # COE strength parameter (effect of non-breeding density on breeding growth rate)
+a = 0 # COE strength parameter (effect of non-breeding density on breeding growth rate)
 
 # Function dynamic - outputs the subsequent state
 def de_fun(state, params, noise):
@@ -126,8 +126,8 @@ def de_fun(state, params, noise):
 
 
 # Growth parameters
-rbVals = np.arange(0, 3.05, 0.5).round(2)
-rnbVals = np.arange(-3, 0.05, 0.5).round(2)
+rbVals = np.arange(0, 3.05, 0.1).round(2)
+rnbVals = np.arange(-3, 0.05, 0.1).round(2)
 
 
 
@@ -202,7 +202,7 @@ df_traj = pd.concat(list_traj_append)
 df_traj.set_index(['rb','rnb','Time'], inplace=True)
 
 # Export trajectories
-df_traj.to_csv('data_export/'+dir_name+'/traj.csv')
+df_traj.to_csv('data_export/ews_stat/'+dir_name+'/traj.csv')
 
 
 
@@ -284,7 +284,7 @@ df_pspec = df_pspec_full[df_pspec_full.index==tmax-1].reset_index().set_index(['
 
 
 ## Export EWS data
-df_ews.to_csv('data_export/'+dir_name+'/ews.csv')
+df_ews.to_csv('data_export/ews_stat/'+dir_name+'/ews.csv')
 
 
 

@@ -1,5 +1,0 @@
-sigma a
-sigma a
-0.01 0.0005
-sigma a
-0.01 0.0005
