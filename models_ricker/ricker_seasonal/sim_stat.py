@@ -211,7 +211,7 @@ df_traj.to_csv('data_export/'+dir_name+'/traj.csv')
 
 #
 ##----------------------
-### Executea ews_compute for each parameter combination
+### Execute ews_compute for each parameter combination
 ##---------------------
 #
 #

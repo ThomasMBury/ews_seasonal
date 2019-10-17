@@ -6,7 +6,7 @@ Created on Tue Nov 20 16:41:47 2018
 @author: Thomas Bury
 
 Simulate transient simulations of the seasonal Ricker model with COEs
-varyting rb
+varyting rnb
 
 """
 
@@ -29,7 +29,7 @@ from cross_corr import cross_corr
 #–----------------------
 
 # Name of directory within data_export 
-dir_name = 'trans_rb'
+dir_name = 'trans_rnb'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -46,7 +46,7 @@ t0 = 0
 tmax = 1000
 tburn = 200 # burn-in periods
 numSims = 3
-seed = 1 # random number generation seed
+seed = 10 # random number generation seed
 
 
 # EWS parameters
@@ -68,7 +68,7 @@ pspec_roll_offset = 10 # offset for rolling window when doing spectrum metrics
 
 # Model parameters
     
-rnb = -0.5     # Growth rate for non-breeding period (emp. -0.0568)
+rb = 2.2   # Growth rate for breeding period
 alpha_b = 0.01 # density dependent effects in breeding period
 alpha_nb = 0.000672 # density dependent effects in non-breeding period
 a = 0.001 # Strength of carry-over effects
@@ -82,9 +82,9 @@ amp_env_nb = 0.02
 
 
 # Bifurcation parameter
-rb_l = 0.3
-rb_h = 2
-rb_crit = 0.5
+rnb_l = -2.1
+rnb_h = -0.05
+rnb_crit = -2
 
 
 # Function dynamic - outputs the subsequent state
@@ -100,8 +100,8 @@ def de_fun(state, control, params, noise):
         
     
     [x, y] = state   # x (y) population after breeding (non-breeding) period
-    [alpha_b, alpha_nb, rnb] = params
-    rb = control
+    [alpha_b, alpha_nb, rb] = params
+    rnb = control
     
     # Compute pop size after breeding period season t+1
     xnew = y * np.exp(rb - a*x - alpha_b * y ) + amp_dem_b*np.sqrt(abs(y))*noise[0] + amp_env_b*y*noise[1]
@@ -113,7 +113,7 @@ def de_fun(state, control, params, noise):
     
 
 # Parameter list
-params = [alpha_b, alpha_nb, rnb]
+params = [alpha_b, alpha_nb, rb]
  
 
 # Initialise arrays to store time-series data
@@ -121,14 +121,14 @@ t = np.arange(t0,tmax,dt)
 s = np.zeros([len(t),2])
    
 # Set bifurcation parameter b, that increases decreases linearly from bh to bl
-b = pd.Series(np.linspace(rb_h, rb_l ,len(t)),index=t)
+b = pd.Series(np.linspace(rnb_h, rnb_l ,len(t)),index=t)
 # Time at which bifurcation occurs
-tcrit = b[b < rb_crit].index[1]
+tcrit = b[b < rnb_crit].index[1]
 
 
 # Initial conditions
-x0 = rb_h/alpha_b
-y0 = x0 * np.exp(rnb - alpha_nb * 0)
+x0 = rb/alpha_b
+y0 = x0 * np.exp(rnb_h - alpha_nb * 0)
 s0 = [x0, y0]
 
 
@@ -151,7 +151,7 @@ for j in range(numSims):
     
     # Run burn-in period on s0
     for i in range(int(tburn/dt)):
-        s0 = de_fun(s0, rb_h, params, dW_burn[i])
+        s0 = de_fun(s0, rnb_h, params, dW_burn[i])
         # make sure that state variable remains >= 0 
         s0 = [np.max([k,0]) for k in s0]
     # Initial condition post burn-in period
@@ -201,7 +201,7 @@ appended_ktau = []
 print('\nBegin EWS computation\n')
 for i in range(numSims):
     # loop through variable
-    for var in ['Non-breeding','Breeding','Total']:
+    for var in ['Non-breeding','Breeding']:
         
         ews_dic = ewstools.core.ews_compute(df_traj_filt.loc[i+1][var], 
                           roll_window = rw,

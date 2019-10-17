@@ -1,9 +1,0 @@
-Job 45733 released
-Traceback (most recent call last):
-  File "../../script_compute_ews.py", line 23, in <module>
-    import seaborn as sns
-ModuleNotFoundError: No module named 'seaborn'
-
-real	0m13.710s
-user	0m4.342s
-sys	0m0.622s

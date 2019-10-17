@@ -62,7 +62,7 @@ def find_equi(rb, rnb):
     
     # Parameters
     s0 = [400,200] # Initial condition
-    tmax = 2000     # Time steps to simulate
+    tmax = 1000     # Time steps to simulate
     eps = 0.1    # Error margin required for equilibria convergence
     
     # Set up
