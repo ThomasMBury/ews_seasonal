@@ -46,7 +46,7 @@ t0 = 0
 tmax = 1000
 tburn = 200 # burn-in periods
 numSims = 3
-seed = 1 # random number generation seed
+seed = 10 # random number generation seed
 
 
 # EWS parameters
@@ -57,7 +57,7 @@ lags = [1,2,3] # autocorrelation lag times
 ews = ['var','ac','sd','cv','skew','kurt','smax','smax/mean','smax/var'] # EWS to compute
 ham_length = 40 # number of data points in Hamming window
 ham_offset = 0.5 # proportion of Hamming window to offset by upon each iteration
-pspec_roll_offset = 10 # offset for rolling window when doing spectrum metrics
+pspec_roll_offset = 20 # offset for rolling window when doing spectrum metrics
 
 
 #----------------------------------
@@ -65,13 +65,17 @@ pspec_roll_offset = 10 # offset for rolling window when doing spectrum metrics
 #----------------------------------
 
 
+# Empirical param values
+rb_emp = 2.24
+rnb_emp = -0.0568
+
 
 # Model parameters
     
-rnb = -0.5     # Growth rate for non-breeding period (emp. -0.0568)
+rnb = rnb_emp    # Growth rate for non-breeding period (emp. -0.0568)
 alpha_b = 0.01 # density dependent effects in breeding period
 alpha_nb = 0.000672 # density dependent effects in non-breeding period
-a = 0.001 # Strength of carry-over effects
+a = 0 # Strength of carry-over effects
 
 # Noise parameters
 amp_dem_b = 0.02 # amplitude of demographic noise
@@ -82,9 +86,9 @@ amp_env_nb = 0.02
 
 
 # Bifurcation parameter
-rb_l = 0.3
-rb_h = 2
-rb_crit = 0.5
+rb_l = -0.1
+rb_h = rb_emp
+rb_crit = 0.1
 
 
 # Function dynamic - outputs the subsequent state
@@ -201,7 +205,7 @@ appended_ktau = []
 print('\nBegin EWS computation\n')
 for i in range(numSims):
     # loop through variable
-    for var in ['Non-breeding','Breeding','Total']:
+    for var in ['Non-breeding','Breeding']:
         
         ews_dic = ewstools.core.ews_compute(df_traj_filt.loc[i+1][var], 
                           roll_window = rw,
@@ -280,58 +284,70 @@ df_ews_deviations = df_ews.std(level=('Variable','Time'))
 # Realisation number to plot
 plot_num = 1
 ## Plot of trajectory, smoothing and EWS of var (x or y)
-fig1, axes = plt.subplots(nrows=5, ncols=1, sharex=True, figsize=(6,8))
+fig1, axes = plt.subplots(nrows=7, ncols=1, sharex=True, figsize=(4,8))
 df_ews.loc[plot_num]['State variable'].unstack(level=0).plot(ax=axes[0],
           title='Early warning signals for a single realisation')
 df_ews.loc[plot_num]['Coefficient of variation'].unstack(level=0).plot(ax=axes[1],legend=False)
 df_ews.loc[plot_num]['Lag-1 AC'].unstack(level=0).plot(ax=axes[2], legend=False)
-df_ews.loc[plot_num,'Smax/Var'].dropna().unstack(level=0).plot(ax=axes[3], legend=False)
-df_ews.loc[plot_num]['Skewness'].dropna().unstack(level=0).plot(ax=axes[4], legend=False, xlim=(0,tmax))
+df_ews.loc[plot_num]['Lag-2 AC'].unstack(level=0).plot(ax=axes[3], legend=False)
+df_ews.loc[plot_num,'Smax/Var'].dropna().unstack(level=0).plot(ax=axes[4], legend=False)
+df_ews.loc[plot_num]['Skewness'].unstack(level=0).plot(ax=axes[5], legend=False, xlim=(0,tmax))
+df_ews.loc[plot_num]['Kurtosis'].unstack(level=0).plot(ax=axes[6], legend=False, xlim=(0,tmax))
 
 axes[0].set_ylabel('Population')
 axes[0].legend(title=None)
 axes[1].set_ylabel('CoV')
 axes[2].set_ylabel('Lag-1 AC')
-axes[3].set_ylabel('Skewness')
+axes[3].set_ylabel('Lag-2 AC')
 axes[4].set_ylabel('Smax/Var')
+axes[5].set_ylabel('Skewness')
+axes[6].set_ylabel('Kurtosis')
 
 
 
 # Realisation number to plot
 plot_num = 2
 ## Plot of trajectory, smoothing and EWS of var (x or y)
-fig2, axes = plt.subplots(nrows=5, ncols=1, sharex=True, figsize=(6,8))
+fig1, axes = plt.subplots(nrows=7, ncols=1, sharex=True, figsize=(4,8))
 df_ews.loc[plot_num]['State variable'].unstack(level=0).plot(ax=axes[0],
           title='Early warning signals for a single realisation')
 df_ews.loc[plot_num]['Coefficient of variation'].unstack(level=0).plot(ax=axes[1],legend=False)
 df_ews.loc[plot_num]['Lag-1 AC'].unstack(level=0).plot(ax=axes[2], legend=False)
-df_ews.loc[plot_num,'Smax/Var'].dropna().unstack(level=0).plot(ax=axes[3], legend=False)
-df_ews.loc[plot_num]['Skewness'].dropna().unstack(level=0).plot(ax=axes[4], legend=False, xlim=(0,tmax))
+df_ews.loc[plot_num]['Lag-2 AC'].unstack(level=0).plot(ax=axes[3], legend=False)
+df_ews.loc[plot_num,'Smax/Var'].dropna().unstack(level=0).plot(ax=axes[4], legend=False)
+df_ews.loc[plot_num]['Skewness'].unstack(level=0).plot(ax=axes[5], legend=False, xlim=(0,tmax))
+df_ews.loc[plot_num]['Kurtosis'].unstack(level=0).plot(ax=axes[6], legend=False, xlim=(0,tmax))
 
 axes[0].set_ylabel('Population')
 axes[0].legend(title=None)
 axes[1].set_ylabel('CoV')
 axes[2].set_ylabel('Lag-1 AC')
-axes[3].set_ylabel('Smax/Var')
-axes[4].set_ylabel('Skewness')
+axes[3].set_ylabel('Lag-2 AC')
+axes[4].set_ylabel('Smax/Var')
+axes[5].set_ylabel('Skewness')
+axes[6].set_ylabel('Kurtosis')
 
 # Realisation number to plot
 plot_num = 3
 ## Plot of trajectory, smoothing and EWS of var (x or y)
-fig3, axes = plt.subplots(nrows=5, ncols=1, sharex=True, figsize=(6,8))
+fig1, axes = plt.subplots(nrows=7, ncols=1, sharex=True, figsize=(4,8))
 df_ews.loc[plot_num]['State variable'].unstack(level=0).plot(ax=axes[0],
           title='Early warning signals for a single realisation')
 df_ews.loc[plot_num]['Coefficient of variation'].unstack(level=0).plot(ax=axes[1],legend=False)
 df_ews.loc[plot_num]['Lag-1 AC'].unstack(level=0).plot(ax=axes[2], legend=False)
-df_ews.loc[plot_num,'Smax/Var'].dropna().unstack(level=0).plot(ax=axes[3], legend=False)
-df_ews.loc[plot_num]['Skewness'].dropna().unstack(level=0).plot(ax=axes[4], legend=False, xlim=(0,tmax))
+df_ews.loc[plot_num]['Lag-2 AC'].unstack(level=0).plot(ax=axes[3], legend=False)
+df_ews.loc[plot_num,'Smax/Var'].dropna().unstack(level=0).plot(ax=axes[4], legend=False)
+df_ews.loc[plot_num]['Skewness'].unstack(level=0).plot(ax=axes[5], legend=False, xlim=(0,tmax))
+df_ews.loc[plot_num]['Kurtosis'].unstack(level=0).plot(ax=axes[6], legend=False, xlim=(0,tmax))
 
 axes[0].set_ylabel('Population')
 axes[0].legend(title=None)
 axes[1].set_ylabel('CoV')
 axes[2].set_ylabel('Lag-1 AC')
-axes[3].set_ylabel('Smax/Var')
-axes[4].set_ylabel('Skewness')
+axes[3].set_ylabel('Lag-2 AC')
+axes[4].set_ylabel('Smax/Var')
+axes[5].set_ylabel('Skewness')
+axes[6].set_ylabel('Kurtosis')
 
 
 
