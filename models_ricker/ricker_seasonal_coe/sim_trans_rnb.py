@@ -43,9 +43,9 @@ if not os.path.exists('data_export/'+dir_name):
 # Simulation parameters
 dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
-tmax = 1000
+tmax = 400
 tburn = 200 # burn-in periods
-numSims = 3
+numSims = 10
 seed = 10 # random number generation seed
 
 
@@ -349,6 +349,122 @@ axes[3].set_ylabel('Lag-2 AC')
 axes[4].set_ylabel('Smax/Var')
 axes[5].set_ylabel('Skewness')
 axes[6].set_ylabel('Kurtosis')
+
+
+
+
+# Realisation number to plot
+plot_num = 4
+## Plot of trajectory, smoothing and EWS of var (x or y)
+fig1, axes = plt.subplots(nrows=7, ncols=1, sharex=True, figsize=(4,8))
+df_ews.loc[plot_num]['State variable'].unstack(level=0).plot(ax=axes[0],
+          title='Early warning signals for a single realisation')
+df_ews.loc[plot_num]['Coefficient of variation'].unstack(level=0).plot(ax=axes[1],legend=False)
+df_ews.loc[plot_num]['Lag-1 AC'].unstack(level=0).plot(ax=axes[2], legend=False)
+df_ews.loc[plot_num]['Lag-2 AC'].unstack(level=0).plot(ax=axes[3], legend=False)
+df_ews.loc[plot_num,'Smax/Var'].dropna().unstack(level=0).plot(ax=axes[4], legend=False)
+df_ews.loc[plot_num]['Skewness'].unstack(level=0).plot(ax=axes[5], legend=False, xlim=(0,tmax))
+df_ews.loc[plot_num]['Kurtosis'].unstack(level=0).plot(ax=axes[6], legend=False, xlim=(0,tmax))
+
+axes[0].set_ylabel('Population')
+axes[0].legend(title=None)
+axes[1].set_ylabel('CoV')
+axes[2].set_ylabel('Lag-1 AC')
+axes[3].set_ylabel('Lag-2 AC')
+axes[4].set_ylabel('Smax/Var')
+axes[5].set_ylabel('Skewness')
+axes[6].set_ylabel('Kurtosis')
+
+# Realisation number to plot
+plot_num = 5
+## Plot of trajectory, smoothing and EWS of var (x or y)
+fig1, axes = plt.subplots(nrows=7, ncols=1, sharex=True, figsize=(4,8))
+df_ews.loc[plot_num]['State variable'].unstack(level=0).plot(ax=axes[0],
+          title='Early warning signals for a single realisation')
+df_ews.loc[plot_num]['Coefficient of variation'].unstack(level=0).plot(ax=axes[1],legend=False)
+df_ews.loc[plot_num]['Lag-1 AC'].unstack(level=0).plot(ax=axes[2], legend=False)
+df_ews.loc[plot_num]['Lag-2 AC'].unstack(level=0).plot(ax=axes[3], legend=False)
+df_ews.loc[plot_num,'Smax/Var'].dropna().unstack(level=0).plot(ax=axes[4], legend=False)
+df_ews.loc[plot_num]['Skewness'].unstack(level=0).plot(ax=axes[5], legend=False, xlim=(0,tmax))
+df_ews.loc[plot_num]['Kurtosis'].unstack(level=0).plot(ax=axes[6], legend=False, xlim=(0,tmax))
+
+axes[0].set_ylabel('Population')
+axes[0].legend(title=None)
+axes[1].set_ylabel('CoV')
+axes[2].set_ylabel('Lag-1 AC')
+axes[3].set_ylabel('Lag-2 AC')
+axes[4].set_ylabel('Smax/Var')
+axes[5].set_ylabel('Skewness')
+axes[6].set_ylabel('Kurtosis')
+
+# Realisation number to plot
+plot_num = 6
+## Plot of trajectory, smoothing and EWS of var (x or y)
+fig1, axes = plt.subplots(nrows=7, ncols=1, sharex=True, figsize=(4,8))
+df_ews.loc[plot_num]['State variable'].unstack(level=0).plot(ax=axes[0],
+          title='Early warning signals for a single realisation')
+df_ews.loc[plot_num]['Coefficient of variation'].unstack(level=0).plot(ax=axes[1],legend=False)
+df_ews.loc[plot_num]['Lag-1 AC'].unstack(level=0).plot(ax=axes[2], legend=False)
+df_ews.loc[plot_num]['Lag-2 AC'].unstack(level=0).plot(ax=axes[3], legend=False)
+df_ews.loc[plot_num,'Smax/Var'].dropna().unstack(level=0).plot(ax=axes[4], legend=False)
+df_ews.loc[plot_num]['Skewness'].unstack(level=0).plot(ax=axes[5], legend=False, xlim=(0,tmax))
+df_ews.loc[plot_num]['Kurtosis'].unstack(level=0).plot(ax=axes[6], legend=False, xlim=(0,tmax))
+
+axes[0].set_ylabel('Population')
+axes[0].legend(title=None)
+axes[1].set_ylabel('CoV')
+axes[2].set_ylabel('Lag-1 AC')
+axes[3].set_ylabel('Lag-2 AC')
+axes[4].set_ylabel('Smax/Var')
+axes[5].set_ylabel('Skewness')
+axes[6].set_ylabel('Kurtosis')
+
+# Realisation number to plot
+plot_num = 7
+## Plot of trajectory, smoothing and EWS of var (x or y)
+fig1, axes = plt.subplots(nrows=7, ncols=1, sharex=True, figsize=(4,8))
+df_ews.loc[plot_num]['State variable'].unstack(level=0).plot(ax=axes[0],
+          title='Early warning signals for a single realisation')
+df_ews.loc[plot_num]['Coefficient of variation'].unstack(level=0).plot(ax=axes[1],legend=False)
+df_ews.loc[plot_num]['Lag-1 AC'].unstack(level=0).plot(ax=axes[2], legend=False)
+df_ews.loc[plot_num]['Lag-2 AC'].unstack(level=0).plot(ax=axes[3], legend=False)
+df_ews.loc[plot_num,'Smax/Var'].dropna().unstack(level=0).plot(ax=axes[4], legend=False)
+df_ews.loc[plot_num]['Skewness'].unstack(level=0).plot(ax=axes[5], legend=False, xlim=(0,tmax))
+df_ews.loc[plot_num]['Kurtosis'].unstack(level=0).plot(ax=axes[6], legend=False, xlim=(0,tmax))
+
+axes[0].set_ylabel('Population')
+axes[0].legend(title=None)
+axes[1].set_ylabel('CoV')
+axes[2].set_ylabel('Lag-1 AC')
+axes[3].set_ylabel('Lag-2 AC')
+axes[4].set_ylabel('Smax/Var')
+axes[5].set_ylabel('Skewness')
+axes[6].set_ylabel('Kurtosis')
+
+# Realisation number to plot
+plot_num = 8
+## Plot of trajectory, smoothing and EWS of var (x or y)
+fig1, axes = plt.subplots(nrows=7, ncols=1, sharex=True, figsize=(4,8))
+df_ews.loc[plot_num]['State variable'].unstack(level=0).plot(ax=axes[0],
+          title='Early warning signals for a single realisation')
+df_ews.loc[plot_num]['Coefficient of variation'].unstack(level=0).plot(ax=axes[1],legend=False)
+df_ews.loc[plot_num]['Lag-1 AC'].unstack(level=0).plot(ax=axes[2], legend=False)
+df_ews.loc[plot_num]['Lag-2 AC'].unstack(level=0).plot(ax=axes[3], legend=False)
+df_ews.loc[plot_num,'Smax/Var'].dropna().unstack(level=0).plot(ax=axes[4], legend=False)
+df_ews.loc[plot_num]['Skewness'].unstack(level=0).plot(ax=axes[5], legend=False, xlim=(0,tmax))
+df_ews.loc[plot_num]['Kurtosis'].unstack(level=0).plot(ax=axes[6], legend=False, xlim=(0,tmax))
+
+axes[0].set_ylabel('Population')
+axes[0].legend(title=None)
+axes[1].set_ylabel('CoV')
+axes[2].set_ylabel('Lag-1 AC')
+axes[3].set_ylabel('Lag-2 AC')
+axes[4].set_ylabel('Smax/Var')
+axes[5].set_ylabel('Skewness')
+axes[6].set_ylabel('Kurtosis')
+
+
+
 
 
 
