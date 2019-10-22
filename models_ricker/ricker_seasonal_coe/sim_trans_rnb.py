@@ -29,10 +29,10 @@ from cross_corr import cross_corr
 #–----------------------
 
 # Name of directory within data_export 
-dir_name = 'trans_rnb'
+dir_name = 'tmax400_rw0p4'
 
-if not os.path.exists('data_export/'+dir_name):
-    os.makedirs('data_export/'+dir_name)
+if not os.path.exists('data_export/trans_rnb/'+dir_name):
+    os.makedirs('data_export/trans_rnb/'+dir_name)
 
 
 #--------------------------------
@@ -46,7 +46,7 @@ t0 = 0
 tmax = 400
 tburn = 200 # burn-in periods
 numSims = 10
-seed = 10 # random number generation seed
+seed = 20 # random number generation seed
 
 
 # EWS parameters
@@ -473,23 +473,23 @@ axes[6].set_ylabel('Kurtosis')
 
 
 
-#
-#
-##------------------------------------
-### Export data 
-##-----------------------------------
-#
-## Export 5 single realisations EWS DataFrame
-#df_ews.loc[1:5].to_csv('data_export/'+dir_name+'/ews_singles.csv')
-#
-## Export power spectra of first 5 realisations
-#df_pspec.loc[1:5].to_csv('data_export/'+dir_name+'/pspec.csv')
-#
-## Export aggregates
-#df_ews_means.to_csv('data_export/'+dir_name+'/ews_means.csv')
-#df_ews_deviations.to_csv('data_export/'+dir_name+'/ews_deviations.csv')
-#
-## Export Kendall tau values
-#df_ktau.to_csv('data_export/'+dir_name+'/ktau.csv')
+
+
+#------------------------------------
+## Export data 
+#-----------------------------------
+
+# Export 5 single realisations EWS DataFrame
+df_ews.to_csv('data_export/trans_rnb/'+dir_name+'/ews_singles.csv')
+
+# Export power spectra of first 5 realisations
+df_pspec.loc[1:5].to_csv('data_export/trans_rnb/'+dir_name+'/pspec.csv')
+
+# Export aggregates
+df_ews_means.to_csv('data_export/trans_rnb/'+dir_name+'/ews_means.csv')
+df_ews_deviations.to_csv('data_export/trans_rnb/'+dir_name+'/ews_deviations.csv')
+
+# Export Kendall tau values
+df_ktau.to_csv('data_export/trans_rnb/'+dir_name+'/ktau.csv')
 
 

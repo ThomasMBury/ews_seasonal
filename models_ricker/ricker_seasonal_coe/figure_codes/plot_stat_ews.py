@@ -278,7 +278,7 @@ axes[1,2].scatter(rnb_emp_idx,rb_emp_idx,marker='x',color='k')
 
 # Skewness
 df_plot = df_ews.loc['Non-breeding'].reset_index().pivot(index='rb', columns='rnb', values='Skewness').iloc[::-1]
-sns.heatmap(df_plot, cmap=cmap, ax=axes[2,0],vmin=-1, vmax=1)
+sns.heatmap(df_plot, cmap=cmap, ax=axes[2,0],vmin=-0.5, vmax=0.5)
 axes[2,0].set_title('Skewness')
 axes[2,0].set_xlabel('')
 axes[2,0].set_ylabel('')
