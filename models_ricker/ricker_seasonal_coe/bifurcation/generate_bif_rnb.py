@@ -1,102 +1,115 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Nov 16 17:46:28 2018
-
-Generate a bifurcation diagram of a discrete system.
-Model: Seasonal Ricker model
+Created on Fri May 17 18:12:16 2019
 
 @author: Thomas Bury
+
+Script to generate points for bifurcation diagram of discrete-time model
+Model: Seasoanl Ricker model with COEs, vary rnb
 """
 
 
-from pynamical import bifurcation_plot, simulate
 import numpy as np
-from numba import jit
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 
-
-
-# Fixed system parameters
+# Fixed model params
 alpha_b = 0.01 # density dependent effects in breeding period
 alpha_nb = 0.000672 # density dependent effects in non-breeding period
+a = 0.001 # Strenghth of COEs
+rb = 2.24 # Growth rate in breeding period
 
+# rnb value to vary over
+rnb_l = -2.5
+rnb_h = 1
 
-#------------------------------
-# Setup bifurcation diagram varying non-breeding growth rate
-
-
-rb = 2.24 # growth rate in breeding period
-
-rnbEmp = -0.0568 # empirically measured rnb
-
-
-
-# Difference equation for breeding population size
-@jit(nopython=True)
-def ricker_b(x, rnb):
+# Difference equation (no noise)
+def de_fun(state, rb, rnb):
     '''
-    Annual iteration for population size after breeding season.
     Inputs:
-        x - breeding population size
-        rnb - growth rate during non-breeding season
-    Ouptut:
-        population size after the following breeding season.
+        state: array of state variables [x,y]
+        rb: breeding growth rate
+        rnb: non-breeding growth rate
+    Output:
+        array for subsequent state
+    '''        
+    
+    [x, y] = state   # x (y) population after breeding (non-breeding) period
+    
+    # Compute pop size after breeding period season t+1
+    xnew = y * np.exp(rb - a*x - alpha_b * y )
+    # Compute pop size after non-breeding period season t+1
+    ynew =  xnew * np.exp(rnb - alpha_nb * xnew )
+    # Ouput updated state        
+    return np.array([xnew, ynew])
+
+
+
+
+def run_model(rb, rnb, tmax=1000, t_keep=100):
     '''
+    Function to run model and keep final points
     
-    # Compute population size after non-breeding season based on x
-    y = x * np.exp(rnb - alpha_nb * x )
-    
-    # Compute population after breeding season
-    xnew = y * np.exp(rb - alpha_b * y )
-    
-    # Output new population size
-    return xnew
-
-
-
-# Difference equation for non-breeding population size
-@jit(nopython=True)
-def ricker_nb(y, rnb):
-    '''
-    Annual iteration for population size after non-breeding season.
     Inputs:
-        y - current population size after non-breeding season
-        rnb - growth rate during breeding season
+        rb: growth rate in the breeding period
+        rnb: growth rate in the non-breeding period
+        tmax: number of time steps to run for
+        t_keep: number of time steps to keep for plotting
+    
     Ouptut:
-        population size after the following non-breeding season.
+        array of state values
     '''
     
-    # Compute population size after breeding season based on y
-    x = y * np.exp(rb - alpha_b * y )
+    # Parameters
+    s0 = [rb/alpha_b,rb/alpha_b] # Initial condition
     
-    # Compute population after breeding seasone
-    ynew = x * np.exp(rnb - alpha_nb * x )
+    # Set up
+    tVals = np.arange(0,tmax+1,1)
+    s = np.zeros([tmax+1,2])
+    s[0] = s0
     
-    # Output new population size
-    return ynew
+    # Run the system 
+    for i in range(len(tVals)-1):
+        s[i+1] = de_fun(s[i],rb,rnb)
+    s_out = s[-t_keep:]
+    t_out = tVals[-t_keep:]
+    dic_temp = {'Time':t_out,'Non-breeding':s_out[:,0],'Breeding':s_out[:,1]}
+    df_out = pd.DataFrame(dic_temp)
+    return df_out
+    
+    
+# Do a sweep over rbvals     
+# Growth parameters
+rnbVals = np.arange(rnb_l,rnb_h,0.01).round(2)
 
 
+# Create a list to store dfs
+list_df = []
 
-
-# Simulate to get bifurcation points
-bif_data_x = simulate(model=ricker_b, num_gens=100, rate_min=-2.5, rate_max=0, num_rates=1000, num_discard=100)
-bif_data_y = simulate(model=ricker_nb, num_gens=100, rate_min=-2.5, rate_max=0, num_rates=1000, num_discard=100)
-
+for rnb in rnbVals:
+    
+    # Run model 
+    df_temp = run_model(rb,rnb)
+    df_temp['rnb'] = rnb
+    list_df.append(df_temp)
+    
+    
+# concatenate dfs
+df_bif = pd.concat(list_df)
 
 # Bifurcation plot
-bifurcation_plot(bif_data_x, title='Non-breeding population size',
-                 xmin=-2.5, xmax=0, ymin=0, ymax=500, save=False,
-                 xlabel='Non-breeding growth rate (rnb)')
-bifurcation_plot(bif_data_y, title='Breeding population size',
-                 xmin=-2.5, xmax=0, ymin=0, ymax=500, save=False,
-                 xlabel='Non-breeding growth rate (rnb)')
+df_bif.plot(x='rnb',y='Non-breeding',kind='scatter')
+df_bif.plot(x='rnb',y='Breeding',kind='scatter')
 
 
-# Export bifurcation points
-bif_data_x.to_csv('../data_export/bif_data/bifdata_rnb_x.csv')
-bif_data_y.to_csv('../data_export/bif_data/bifdata_rnb_y.csv')
+# Export data for plotting in mma
+df_bif.to_csv('data/rnb_vary.csv')
+
+
 
 
 
