@@ -16,7 +16,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os 
 
-# import ewstools
+## import ewstools
+#import ewstools
+
+# Import ewstools locally
+import sys
+sys.path.append('../../../../ewstools')
 import ewstools
 
 
@@ -45,7 +50,7 @@ dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
 tmax = 400
 tburn = 200 # burn-in periods
-numSims = 10
+numSims = 20
 seed = 20 # random number generation seed
 
 
@@ -58,7 +63,7 @@ ews = ['var','ac','sd','cv','skew','kurt','smax','smax/mean','smax/var'] # EWS t
 ham_length = 40 # number of data points in Hamming window
 ham_offset = 0.5 # proportion of Hamming window to offset by upon each iteration
 pspec_roll_offset = 20 # offset for rolling window when doing spectrum metrics
-
+ktau_time = 250
 
 #----------------------------------
 # Simulate many (transient) realisations
@@ -216,7 +221,8 @@ for i in range(numSims):
                           ham_offset = ham_offset,
                           pspec_roll_offset = pspec_roll_offset,
                           upto=tcrit,
-                          sweep=False)
+                          sweep=False,
+                          ktau_time = ktau_time)
         
         # The DataFrame of EWS
         df_ews_temp = ews_dic['EWS metrics']
@@ -468,8 +474,9 @@ axes[6].set_ylabel('Kurtosis')
 
 
 
-# Box plot to visualise kendall tau values
-#df_ktau[['Coefficient of variation','Lag-1 AC','Skewness','Cross correlation']].boxplot()
+## Box plot to visualise kendall tau values
+#df_ktau.swaplevel(0,1).loc['Breeding'][['Variance','Coefficient of variation','Lag-1 AC','Skewness','Kurtosis','Cross correlation']].boxplot()
+#df_ktau.swaplevel(0,1).loc['Non-breeding'][['Variance','Coefficient of variation','Lag-1 AC','Skewness','Kurtosis','Cross correlation']].boxplot()
 
 
 
@@ -479,8 +486,8 @@ axes[6].set_ylabel('Kurtosis')
 ## Export data 
 #-----------------------------------
 
-# Export 5 single realisations EWS DataFrame
-df_ews.to_csv('data_export/trans_rnb/'+dir_name+'/ews_singles.csv')
+# Export single realisations EWS DataFrame
+df_ews.loc[1:20].to_csv('data_export/trans_rnb/'+dir_name+'/ews_singles.csv')
 
 # Export power spectra of first 5 realisations
 df_pspec.loc[1:5].to_csv('data_export/trans_rnb/'+dir_name+'/pspec.csv')
