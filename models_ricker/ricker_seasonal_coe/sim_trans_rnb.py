@@ -50,7 +50,7 @@ dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
 tmax = 400
 tburn = 200 # burn-in periods
-numSims = 20
+numSims = 100
 seed = 20 # random number generation seed
 
 
@@ -487,10 +487,10 @@ axes[6].set_ylabel('Kurtosis')
 #-----------------------------------
 
 # Export single realisations EWS DataFrame
-df_ews.loc[1:20].to_csv('data_export/trans_rnb/'+dir_name+'/ews_singles.csv')
+df_ews.loc[:20].to_csv('data_export/trans_rnb/'+dir_name+'/ews_singles.csv')
 
 # Export power spectra of first 5 realisations
-df_pspec.loc[1:5].to_csv('data_export/trans_rnb/'+dir_name+'/pspec.csv')
+df_pspec.loc[:20].to_csv('data_export/trans_rnb/'+dir_name+'/pspec.csv')
 
 # Export aggregates
 df_ews_means.to_csv('data_export/trans_rnb/'+dir_name+'/ews_means.csv')
