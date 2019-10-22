@@ -93,7 +93,7 @@ list_df = []
 for rb in rbVals:
     
     # Run model 
-    df_temp = run_model(rb,rnb)
+    df_temp = run_model(rb,rnb,t_keep=10)
     df_temp['rb'] = rb
     list_df.append(df_temp)
     
