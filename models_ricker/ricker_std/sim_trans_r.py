@@ -17,11 +17,13 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
-# import ewstools
-from ewstools import ewstools
+# Import ewstools locally to get most up to date
+import sys
+sys.path.append('../../../../ewstools')
+import ewstools
 
 # import cross correlation function
-from cross_corr import cross_corr
+#from cross_corr import cross_corr
 
 
 #---------------------
@@ -29,7 +31,7 @@ from cross_corr import cross_corr
 #–----------------------
 
 # Name of directory within data_export
-dir_name = 'trans_r_long'
+dir_name = 'trans_r_long2'
 
 if not os.path.exists('data_export/'+dir_name):
     os.makedirs('data_export/'+dir_name)
@@ -75,7 +77,7 @@ amp_env = 0.1	# Environmental noise amplitude
 
 # Bifurcation parameter
 rl = -0.2
-rh = 1
+rh = 1.4
 rcrit = 0
 
 # Function dynamic - outputs the subsequent state
@@ -184,7 +186,7 @@ for i in range(numSims):
     # loop through variable
     for var in ['x']:
         
-        ews_dic = ewstools.ews_compute(df_traj_filt.loc[i+1][var], 
+        ews_dic = ewstools.core.ews_compute(df_traj_filt.loc[i+1][var], 
                           roll_window = rw,
                           smooth='Lowess',
                           span=span,
@@ -194,7 +196,8 @@ for i in range(numSims):
                           ham_offset = ham_offset,
                           pspec_roll_offset = pspec_roll_offset,
                           upto=tcrit,
-                          sweep=False)
+                          sweep=False,
+                          ktau_time=600)
         
         # The DataFrame of EWS
         df_ews_temp = ews_dic['EWS metrics']
@@ -344,10 +347,10 @@ df_ews.loc[plot_num,var]['Skewness'].plot(ax=axes[5],legend=True)
 #-----------------------------------
 
 # Export 5 sinlge realisations EWS DataFrame
-df_ews.loc[1:5].to_csv('data_export/'+dir_name+'/ews_singles.csv')
+df_ews.loc[:5].to_csv('data_export/'+dir_name+'/ews_singles.csv')
 
 # Export power spectra of first 5 realisations
-df_pspec.loc[1:5].to_csv('data_export/'+dir_name+'/pspec.csv')
+df_pspec.loc[:5].to_csv('data_export/'+dir_name+'/pspec.csv')
 
 # Export aggregates
 df_ews_means.to_csv('data_export/'+dir_name+'/ews_means.csv')

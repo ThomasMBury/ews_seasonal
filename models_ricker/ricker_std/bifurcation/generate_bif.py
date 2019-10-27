@@ -58,7 +58,7 @@ def run_model(r, tmax=1000, t_keep=100):
     '''
     
     # Parameters
-    s0 = [r/alpha] # Initial condition
+    s0 = [r/alpha+1] # Initial condition
     
     # Set up
     tVals = np.arange(0,tmax+1,1)
@@ -87,7 +87,7 @@ list_df = []
 for r in rVals:
     
     # Run model 
-    df_temp = run_model(r,t_keep=400)
+    df_temp = run_model(r,t_keep=100)
     df_temp['r'] = r
     list_df.append(df_temp)
     
