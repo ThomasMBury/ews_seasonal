@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 # Fixed model params
 alpha_b = 0.01 # density dependent effects in breeding period
 alpha_nb = 0.000672 # density dependent effects in non-breeding period
-a = 0.001 # Strenghth of COEs
+a = 0 # Strenghth of COEs
 rb = 2.24 # Growth rate in breeding period
 
 # rnb value to vary over
@@ -107,7 +107,7 @@ df_bif.plot(x='rnb',y='Breeding',kind='scatter')
 
 
 # Export data for plotting in mma
-df_bif.to_csv('data/rnb_vary.csv')
+df_bif.to_csv('data/rnb_vary_a0.csv')
 
 
 

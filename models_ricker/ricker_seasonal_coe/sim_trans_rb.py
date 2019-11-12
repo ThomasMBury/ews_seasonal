@@ -29,7 +29,7 @@ from cross_corr import cross_corr
 #–----------------------
 
 # Name of directory within data_export 
-dir_name = 'tmax400_rwp4'
+dir_name = 'tmax1000_rwp4'
 
 if not os.path.exists('data_export/trans_rb/'+dir_name):
     os.makedirs('data_export/trans_rb/'+dir_name)
@@ -43,7 +43,7 @@ if not os.path.exists('data_export/trans_rb/'+dir_name):
 # Simulation parameters
 dt = 1 # time-step (must be 1 since discrete-time system)
 t0 = 0
-tmax = 400
+tmax = 1000
 tburn = 200 # burn-in periods
 numSims = 100
 seed = 20 # random number generation seed
@@ -219,7 +219,7 @@ for i in range(numSims):
                           pspec_roll_offset = pspec_roll_offset,
                           upto=tcrit,
                           sweep=False,
-                          ktau_time=250)
+                          ktau_time=650)
         
         # The DataFrame of EWS
         df_ews_temp = ews_dic['EWS metrics']

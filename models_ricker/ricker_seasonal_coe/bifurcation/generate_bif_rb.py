@@ -20,12 +20,11 @@ import matplotlib.pyplot as plt
 # Fixed model params
 alpha_b = 0.01 # density dependent effects in breeding period
 alpha_nb = 0.000672 # density dependent effects in non-breeding period
-a = 0.001 # Strenghth of COEs
+a = 0 # Strenghth of COEs
 rnb = -0.0568 # Growth rate in non-breeding period
-
 # Rb value to vary over
 rb_l = 0
-rb_h = 4
+rb_h = 6
 
 # Difference equation (no noise)
 def de_fun(state, rb, rnb):
@@ -65,7 +64,7 @@ def run_model(rb, rnb, tmax=1000, t_keep=100):
     '''
     
     # Parameters
-    s0 = [rb/alpha_b,rb/alpha_b] # Initial condition
+    s0 = [rb/alpha_b+1,rb/alpha_b+1] # Initial condition
     
     # Set up
     tVals = np.arange(0,tmax+1,1)
@@ -107,7 +106,7 @@ df_bif.plot(x='rb',y='Breeding',kind='scatter')
 
 
 # Export data for plotting in mma
-df_bif.to_csv('data/rb_vary.csv')
+df_bif.to_csv('data/rb_vary_a0.csv')
 
 
 
